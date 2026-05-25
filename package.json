@@ -1,0 +1,186 @@
+/**
+ * 국토교통부 아파트 전월세 실거래가 API
+ * 공공데이터포털(data.go.kr)에서 인증키를 발급받아 .env 파일에 설정하세요.
+ * VITE_MOLIT_API_KEY=your_api_key_here
+ */
+
+const API_KEY = import.meta.env.VITE_MOLIT_API_KEY || 'DEMO_KEY';
+
+// 서울시 25개 구 법정동코드
+export const SEOUL_GU = {
+  '강남구': '11680', '강동구': '11740', '강북구': '11305', '강서구': '11500',
+  '관악구': '11620', '광진구': '11215', '구로구': '11530', '금천구': '11545',
+  '노원구': '11350', '도봉구': '11320', '동대문구': '11230', '동작구': '11590',
+  '마포구': '11440', '서대문구': '11410', '서초구': '11650', '성동구': '11200',
+  '성북구': '11290', '송파구': '11710', '양천구': '11470', '영등포구': '11560',
+  '용산구': '11170', '은평구': '11380', '종로구': '11110', '중구': '11140',
+  '중랑구': '11260',
+};
+
+/**
+ * 전월세 실거래가 조회
+ * @param {string} lawdCd - 법정동코드 (5자리)
+ * @param {string} dealYmd - 계약연월 (YYYYMM)
+ */
+export async function fetchAptRent(lawdCd, dealYmd) {
+  // 개발/데모 모드: 샘플 데이터 반환
+  if (API_KEY === 'DEMO_KEY') {
+    return getDemoData(lawdCd, dealYmd);
+  }
+
+  const url = `https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent`
+    + `?serviceKey=${encodeURIComponent(API_KEY)}`
+    + `&LAWD_CD=${lawdCd}`
+    + `&DEAL_YMD=${dealYmd}`
+    + `&numOfRows=100`
+    + `&pageNo=1`;
+
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    return parseXmlResponse(text);
+  } catch (err) {
+    console.error('API 호출 오류:', err);
+    return getDemoData(lawdCd, dealYmd);
+  }
+}
+
+/**
+ * XML 응답 파싱
+ */
+function parseXmlResponse(xml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  const items = doc.querySelectorAll('item');
+  const result = [];
+
+  items.forEach(item => {
+    const get = (tag) => item.querySelector(tag)?.textContent?.trim() || '';
+    result.push({
+      aptName: get('아파트'),
+      dong: get('법정동'),
+      area: parseFloat(get('전용면적') || '0'),
+      deposit: parseInt((get('보증금액') || '0').replace(/,/g, '')),
+      monthlyRent: parseInt((get('월세금액') || '0').replace(/,/g, '')),
+      floor: get('층'),
+      buildYear: get('건축년도'),
+      dealYear: get('년'),
+      dealMonth: get('월'),
+      dealDay: get('일'),
+      type: parseInt(get('월세금액') || '0') > 0 ? '반전세' : '전세',
+    });
+  });
+
+  return result;
+}
+
+/**
+ * 중복배제 핵심 알고리즘
+ * 3단계: 고유 키 생성 → 유사도 분석 → 대표 매물 선정
+ */
+export function deduplicateListings(listings) {
+  const groups = new Map();
+
+  listings.forEach(item => {
+    // 1단계: 고유 키 생성 (단지명 + 동 + 면적 + 보증금)
+    const exactKey = `${item.aptName}_${item.dong}_${Math.round(item.area)}_${item.deposit}`;
+
+    if (groups.has(exactKey)) {
+      groups.get(exactKey).count += 1;
+      return;
+    }
+
+    // 2단계: 유사도 분석 (기존 그룹과 비교)
+    let merged = false;
+    for (const [key, group] of groups) {
+      const rep = group.rep;
+      const nameSim = stringSimilarity(item.aptName, rep.aptName);
+      const areaDiff = Math.abs(item.area - rep.area);
+      const depositDiff = Math.abs(item.deposit - rep.deposit);
+
+      if (nameSim >= 0.8 && areaDiff <= 3 && depositDiff <= 500) {
+        group.count += 1;
+        // 더 최근 매물을 대표로 선정
+        if ((item.dealYear + item.dealMonth + item.dealDay) >
+            (rep.dealYear + rep.dealMonth + rep.dealDay)) {
+          group.rep = item;
+        }
+        merged = true;
+        break;
+      }
+    }
+
+    if (!merged) {
+      groups.set(exactKey, { rep: item, count: 1 });
+    }
+  });
+
+  // 3단계: 대표 매물 반환 (중개사 수 포함)
+  return Array.from(groups.values()).map(g => ({
+    ...g.rep,
+    brokerCount: g.count,
+  }));
+}
+
+/**
+ * 문자열 유사도 계산 (Jaccard)
+ */
+function stringSimilarity(a, b) {
+  if (!a || !b) return 0;
+  const setA = new Set(a.split(''));
+  const setB = new Set(b.split(''));
+  const intersection = new Set([...setA].filter(x => setB.has(x)));
+  const union = new Set([...setA, ...setB]);
+  return intersection.size / union.size;
+}
+
+/**
+ * 서울시 대출 조건 자동 판단
+ * 기준: 보증금 7억 이하 (서울시 신혼부부 이자지원 대상)
+ */
+export function checkLoanEligibility(deposit) {
+  return deposit <= 70000; // 단위: 만원
+}
+
+/**
+ * 월 이자 계산 (서울시 이자지원 적용)
+ * 기준금리 4.95% - 이자지원 2.0% = 실부담 2.95%
+ */
+export function calcMonthlyInterest(loanAmount) {
+  const annualRate = 0.0295;
+  return Math.round(loanAmount * annualRate / 12);
+}
+
+/**
+ * 데모 데이터 (API 키 미설정 시)
+ */
+function getDemoData(lawdCd, dealYmd) {
+  const guNames = {
+    '11680': '역삼동', '11710': '문정동', '11650': '반포동',
+    '11440': '마포동', '11380': '불광동', '11200': '행당동',
+  };
+  const dong = guNames[lawdCd] || '○○동';
+  const apts = ['래미안', '힐스테이트', '푸르지오', 'e편한세상', '자이', '아이파크'];
+  const data = [];
+
+  for (let i = 0; i < 15; i++) {
+    const name = `${dong.replace('동','')[0]}○○ ${apts[i % apts.length]} ${Math.floor(i/apts.length)+1}단지`;
+    const area = [59.97, 74.05, 84.93][i % 3];
+    const deposit = 35000 + (i * 2000) + Math.floor(Math.random() * 1000);
+    const monthly = i % 4 === 0 ? 50 + i * 5 : 0;
+    data.push({
+      aptName: name,
+      dong,
+      area,
+      deposit,
+      monthlyRent: monthly,
+      floor: String(Math.floor(Math.random() * 20) + 1),
+      buildYear: String(2000 + (i * 2)),
+      dealYear: dealYmd.substring(0, 4),
+      dealMonth: dealYmd.substring(4, 6),
+      dealDay: '15',
+      type: monthly > 0 ? '반전세' : '전세',
+    });
+  }
+  return data;
+}
