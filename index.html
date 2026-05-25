@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>유해인 포트폴리오 - 스마트 실거래가</title>
+  <title>유태현 신혼집 - 스마트 실거래가</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -158,16 +158,156 @@
       return Math.round(loanAmount * annualRate / 12);
     }
     function getDemoData(lawdCd, dealYmd) {
-      const guNames = {
-        '11680': '역삼동', '11710': '문정동', '11650': '반포동',
-        '11440': '마포동', '11380': '불광동', '11200': '행당동',
+      const DEMO_APT_NAMES = {
+        '11680': [ // 강남구
+          { name: '역삼래미안', dong: '역삼동' }, { name: '래미안그레이튼', dong: '역삼동' },
+          { name: '역삼e편한세상', dong: '역삼동' }, { name: '개포래미안블레스티지', dong: '개포동' },
+          { name: '디에이치아너힐즈', dong: '개포동' }, { name: '래미안포레스트', dong: '개포동' },
+          { name: '대치SK뷰', dong: '대치동' }, { name: '대치래미안', dong: '대치동' },
+          { name: '은마아파트', dong: '대치동' }, { name: '도곡렉슬', dong: '도곡동' },
+        ],
+        '11740': [ // 강동구
+          { name: '고덕래미안힐스테이트', dong: '고덕동' }, { name: '고덕그라시움', dong: '고덕동' },
+          { name: '고덕아르테온', dong: '고덕동' }, { name: '명일래미안숲', dong: '명일동' },
+          { name: '올림픽파크에비뉴포레', dong: '둔촌동' }, { name: '강동롯데캐슬퍼스트', dong: '성내동' },
+          { name: '암사래미안', dong: '암사동' }, { name: '강동힐스테이트', dong: '천호동' },
+        ],
+        '11305': [ // 강북구
+          { name: '미아래미안', dong: '미아동' }, { name: '꿈의숲SK뷰', dong: '미아동' },
+          { name: '강북힐스테이트', dong: '번동' }, { name: '수유래미안', dong: '수유동' },
+          { name: '벽산라이브파크', dong: '미아동' }, { name: '미아푸르지오', dong: '미아동' },
+        ],
+        '11500': [ // 강서구
+          { name: '마곡래미안마에스트로', dong: '마곡동' }, { name: '마곡힐스테이트', dong: '마곡동' },
+          { name: '마곡엠밸리7단지', dong: '마곡동' }, { name: '염창동아', dong: '염창동' },
+          { name: '가양강변힐스테이트', dong: '가양동' }, { name: '화곡래미안', dong: '화곡동' },
+          { name: '우장산아이파크e편한세상', dong: '화곡동' }, { name: '발산역센트럴아이파크', dong: '발산동' },
+        ],
+        '11620': [ // 관악구
+          { name: '신림래미안', dong: '신림동' }, { name: '봉천래미안', dong: '봉천동' },
+          { name: '관악드림타운', dong: '신림동' }, { name: '관악푸르지오', dong: '봉천동' },
+          { name: '신림롯데캐슬에코', dong: '신림동' }, { name: '현대아파트', dong: '봉천동' },
+        ],
+        '11215': [ // 광진구
+          { name: '자양래미안', dong: '자양동' }, { name: '광진힐스테이트', dong: '자양동' },
+          { name: '구의래미안', dong: '구의동' }, { name: '광나루현대', dong: '광장동' },
+          { name: 'e편한세상광진그랜드파크', dong: '자양동' }, { name: '광장현대아파트', dong: '광장동' },
+        ],
+        '11530': [ // 구로구
+          { name: '구로래미안', dong: '구로동' }, { name: '개봉힐스테이트', dong: '개봉동' },
+          { name: '신도림e편한세상', dong: '신도림동' }, { name: '구로롯데캐슬', dong: '구로동' },
+          { name: '오류동래미안', dong: '오류동' }, { name: '구로자이', dong: '구로동' },
+        ],
+        '11545': [ // 금천구
+          { name: '시흥래미안', dong: '시흥동' }, { name: '금천롯데캐슬골드파크', dong: '독산동' },
+          { name: '독산래미안', dong: '독산동' }, { name: '가산W', dong: '가산동' },
+          { name: '금천푸르지오', dong: '시흥동' },
+        ],
+        '11350': [ // 노원구
+          { name: '중계래미안', dong: '중계동' }, { name: '중계그린', dong: '중계동' },
+          { name: '상계주공', dong: '상계동' }, { name: '하계현대', dong: '하계동' },
+          { name: '노원e편한세상', dong: '월계동' }, { name: '공릉래미안', dong: '공릉동' },
+          { name: '중계두산', dong: '중계동' }, { name: '상계롯데', dong: '상계동' },
+        ],
+        '11320': [ // 도봉구
+          { name: '창동래미안', dong: '창동' }, { name: '도봉래미안', dong: '도봉동' },
+          { name: '방학래미안', dong: '방학동' }, { name: '창동주공', dong: '창동' },
+          { name: '도봉자이', dong: '도봉동' },
+        ],
+        '11230': [ // 동대문구
+          { name: '장안래미안', dong: '장안동' }, { name: '이문래미안', dong: '이문동' },
+          { name: '답십리래미안', dong: '답십리동' }, { name: '전농래미안', dong: '전농동' },
+          { name: '동대문힐스테이트', dong: '용두동' }, { name: '회기래미안', dong: '회기동' },
+        ],
+        '11590': [ // 동작구
+          { name: '흑석래미안', dong: '흑석동' }, { name: '흑석한강푸르지오', dong: '흑석동' },
+          { name: '사당래미안', dong: '사당동' }, { name: '이수브라운스톤', dong: '상도동' },
+          { name: '상도래미안', dong: '상도동' }, { name: '노량진래미안', dong: '노량진동' },
+        ],
+        '11440': [ // 마포구
+          { name: '마포래미안푸르지오', dong: '아현동' }, { name: '공덕자이', dong: '공덕동' },
+          { name: '마포프레스티지자이', dong: '도화동' }, { name: '신수래미안', dong: '신수동' },
+          { name: '마포현대', dong: '마포동' }, { name: '용강래미안', dong: '용강동' },
+          { name: '하중도롯데캐슬', dong: '상암동' }, { name: '망원래미안', dong: '망원동' },
+        ],
+        '11410': [ // 서대문구
+          { name: '홍제래미안', dong: '홍제동' }, { name: '남가좌래미안', dong: '남가좌동' },
+          { name: '북가좌래미안', dong: '북가좌동' }, { name: '신촌숲아이파크', dong: '신촌동' },
+          { name: '홍은래미안', dong: '홍은동' }, { name: '연희자이', dong: '연희동' },
+        ],
+        '11650': [ // 서초구
+          { name: '래미안퍼스티지', dong: '반포동' }, { name: '반포자이', dong: '반포동' },
+          { name: '아크로리버파크', dong: '반포동' }, { name: '래미안반포리오센트', dong: '반포동' },
+          { name: '서초래미안', dong: '서초동' }, { name: '서초자이르네', dong: '서초동' },
+          { name: '방배래미안아이파크', dong: '방배동' }, { name: '잠원래미안', dong: '잠원동' },
+        ],
+        '11200': [ // 성동구
+          { name: '왕십리뉴타운래미안', dong: '하왕십리동' }, { name: '행당한진타운', dong: '행당동' },
+          { name: '서울숲리버뷰자이', dong: '성수동' }, { name: '금호래미안힐스테이트', dong: '금호동' },
+          { name: '금호자이1차', dong: '금호동' }, { name: '옥수태극', dong: '옥수동' },
+          { name: '하왕십리래미안', dong: '하왕십리동' },
+        ],
+        '11290': [ // 성북구
+          { name: '길음래미안', dong: '길음동' }, { name: '정릉래미안', dong: '정릉동' },
+          { name: '보문래미안', dong: '보문동' }, { name: '돈암래미안', dong: '돈암동' },
+          { name: '종암SK뷰', dong: '종암동' }, { name: '길음뉴타운자이', dong: '길음동' },
+        ],
+        '11710': [ // 송파구
+          { name: '헬리오시티', dong: '가락동' }, { name: '파크리오', dong: '잠실동' },
+          { name: '잠실래미안아이파크', dong: '잠실동' }, { name: '리센츠', dong: '잠실동' },
+          { name: '트리지움', dong: '잠실동' }, { name: '엘스', dong: '잠실동' },
+          { name: '올림픽파크포레온', dong: '둔촌동' }, { name: '문정래미안', dong: '문정동' },
+          { name: '송파래미안', dong: '송파동' }, { name: '잠실리센츠', dong: '잠실동' },
+        ],
+        '11470': [ // 양천구
+          { name: '목동신시가지1단지', dong: '목동' }, { name: '목동신시가지2단지', dong: '목동' },
+          { name: '목동신시가지7단지', dong: '목동' }, { name: '목동힐스테이트', dong: '신정동' },
+          { name: '신정래미안', dong: '신정동' }, { name: '목동자이', dong: '목동' },
+          { name: '신목동파라곤', dong: '신정동' }, { name: '오목교e편한세상', dong: '목동' },
+        ],
+        '11560': [ // 영등포구
+          { name: '여의도자이', dong: '여의도동' }, { name: '여의도삼부', dong: '여의도동' },
+          { name: '당산래미안', dong: '당산동' }, { name: '영등포자이', dong: '영등포동' },
+          { name: '양평래미안', dong: '양평동' }, { name: '문래래미안', dong: '문래동' },
+          { name: '여의도파크원', dong: '여의도동' },
+        ],
+        '11170': [ // 용산구
+          { name: '래미안용산더센트럴', dong: '한강로동' }, { name: '한남더힐', dong: '한남동' },
+          { name: '이촌래미안', dong: '이촌동' }, { name: '용산e편한세상', dong: '문배동' },
+          { name: '한강대우', dong: '이촌동' }, { name: '이촌현대', dong: '이촌동' },
+          { name: '한남포레스트', dong: '한남동' },
+        ],
+        '11380': [ // 은평구
+          { name: '불광래미안', dong: '불광동' }, { name: '녹번래미안', dong: '녹번동' },
+          { name: '은평뉴타운', dong: '진관동' }, { name: '은평래미안', dong: '응암동' },
+          { name: '갈현래미안', dong: '갈현동' }, { name: '수색코오롱하늘채', dong: '수색동' },
+        ],
+        '11110': [ // 종로구
+          { name: '경희궁자이', dong: '교남동' }, { name: '종로자이르네', dong: '창신동' },
+          { name: '무악래미안', dong: '무악동' }, { name: '청운효자푸르지오', dong: '청운동' },
+          { name: '평창동산현대', dong: '평창동' },
+        ],
+        '11140': [ // 중구
+          { name: '황학래미안', dong: '황학동' }, { name: '신당래미안', dong: '신당동' },
+          { name: '중구e편한세상', dong: '신당동' }, { name: '동호현대', dong: '신당동' },
+          { name: '청구힐스테이트', dong: '청구동' },
+        ],
+        '11260': [ // 중랑구
+          { name: '면목래미안', dong: '면목동' }, { name: '중화래미안', dong: '중화동' },
+          { name: '망우래미안', dong: '망우동' }, { name: '신내e편한세상', dong: '신내동' },
+          { name: '중랑구청역더샵', dong: '면목동' }, { name: '상봉래미안', dong: '상봉동' },
+        ],
       };
-      const guName = Object.keys(SEOUL_GU).find(key => SEOUL_GU[key] === lawdCd) || '서울시';
-      const dong = guNames[lawdCd] || `${guName} ○○동`;
-      const apts = ['래미안', '힐스테이트', '푸르지오', 'e편한세상', '자이', '아이파크'];
+      const aptList = DEMO_APT_NAMES[lawdCd] || [
+        { name: '래미안아파트', dong: '○○동' }, { name: '힐스테이트', dong: '○○동' },
+        { name: '푸르지오', dong: '○○동' }, { name: 'e편한세상', dong: '○○동' },
+        { name: '자이', dong: '○○동' }, { name: '아이파크', dong: '○○동' },
+      ];
       const data = [];
       for (let i = 0; i < 45; i++) {
-        const name = `${dong.replace('동','')[0]}○○ ${apts[i % apts.length]} ${Math.floor(i/apts.length)+1}단지`;
+        const apt = aptList[i % aptList.length];
+        const name = apt.name;
+        const dong = apt.dong;
         const area = [59.97, 74.05, 84.93][i % 3];
         const deposit = 35000 + (i * 2000) + Math.floor(Math.random() * 1000);
         const monthly = i % 4 === 0 ? 50 + i * 5 : 0;
@@ -273,7 +413,7 @@
             <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
               <div className="flex items-center gap-2 text-blue-600">
                 <Home size={28} className="stroke-[2.5]" />
-                <h1 className="text-xl font-bold tracking-tight">유해인 포트폴리오</h1>
+                <h1 className="text-xl font-bold tracking-tight">유태현 신혼집</h1>
               </div>
               <button
                 onClick={() => setShowSettings(!showSettings)}
