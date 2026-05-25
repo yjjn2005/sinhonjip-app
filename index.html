@@ -634,8 +634,11 @@ function dabangUrl(aptName) {
 
         const isTopItem = (i) => smartScore(i) >= 180;
 
-        // 면적 필터 먼저 적용
-        const areaFiltered = deduped.filter(i => i.area >= minArea);
+        // 면적 필터 + 보증금 7억 이하 (전세 기준 서울시 이자지원 한도)
+        const areaFiltered = deduped.filter(i =>
+          i.area >= minArea &&
+          (i.type !== '전세' || i.deposit <= 70000)  // 전세는 7억 이하만, 월세는 보증금 무관
+        );
 
         const filtered = typeFilter === '추천'
           ? areaFiltered.filter(isTopItem)
