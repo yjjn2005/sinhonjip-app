@@ -538,6 +538,7 @@ function dabangUrl(aptName) {
       const [typeFilter, setTypeFilter] = useState('전체');
       const [minArea, setMinArea] = useState(59); // 기본 59㎡ 이상
       const [searchRange, setSearchRange] = useState(''); // "2025.01 ~ 2025.06" 형태
+      const [sortOrder, setSortOrder] = useState('recent'); // 'recent' | 'score'
       const handleSaveApiKey = (e) => {
         const val = e.target.value;
         setApiKey(val);
@@ -607,13 +608,29 @@ function dabangUrl(aptName) {
 
         const deduped = deduplicateListings(originalListings);
 
-        // 스마트 우선순위 정렬: ①전세 ②6억근접 ③이자지원 ④교통
-        deduped.sort((a, b) => {
-          const diff = smartScore(b) - smartScore(a);
-          if (diff !== 0) return diff;
-          // 동점이면 6억에 더 가까운 순
-          return Math.abs(a.deposit - TARGET_DEPOSIT) - Math.abs(b.deposit - TARGET_DEPOSIT);
-        });
+        // 날짜 비교용 정수값 계산 (YYYYMMDD)
+        const dateKey = (i) => {
+          const y = String(i.dealYear || '0');
+          const m = String(i.dealMonth || '00').padStart(2, '0');
+          const d = String(i.dealDay || '00').padStart(2, '0');
+          return parseInt(`${y}${m}${d}`) || 0;
+        };
+
+        if (sortOrder === 'recent') {
+          // 최근순 내림차순 (거래일 최신 → 오래된 순)
+          deduped.sort((a, b) => {
+            const dateDiff = dateKey(b) - dateKey(a);
+            if (dateDiff !== 0) return dateDiff;
+            return smartScore(b) - smartScore(a); // 같은 날짜면 추천점수순
+          });
+        } else {
+          // 추천 우선순위 정렬: ①전세 ②6억근접 ③이자지원 ④교통
+          deduped.sort((a, b) => {
+            const diff = smartScore(b) - smartScore(a);
+            if (diff !== 0) return diff;
+            return Math.abs(a.deposit - TARGET_DEPOSIT) - Math.abs(b.deposit - TARGET_DEPOSIT);
+          });
+        }
 
         const isTopItem = (i) => smartScore(i) >= 180;
 
@@ -639,7 +656,7 @@ function dabangUrl(aptName) {
           near6Uk: topCount,
         };
         return { listings: filtered, stats };
-      }, [originalListings, typeFilter, minArea]);
+      }, [originalListings, typeFilter, minArea, sortOrder]);
       useEffect(() => {
         handleSearch();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -809,6 +826,23 @@ function dabangUrl(aptName) {
                 </button>
               </div>
             )}
+            {/* 정렬 토글 */}
+            {!loading && !error && processedData.stats.deduped > 0 && (
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setSortOrder('recent')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${sortOrder === 'recent' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'}`}
+                >
+                  📅 최근순
+                </button>
+                <button
+                  onClick={() => setSortOrder('score')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${sortOrder === 'score' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'}`}
+                >
+                  🎯 추천순
+                </button>
+              </div>
+            )}
             {/* 매물 유형 필터 버튼 */}
             {!loading && !error && processedData.stats.deduped > 0 && (
               <div className="flex gap-2">
@@ -889,14 +923,14 @@ function dabangUrl(aptName) {
                           <span className="flex items-center gap-1"><Calendar size={12} />{item.buildYear}년식</span>
                           <span>계약 {item.dealMonth}.{item.dealDay}</span>
                         </div>
-                        {/* 대중교통 시간 배지 */}
+                        {/* 대중교통 소요시간 요약 */}
                         <div className="flex gap-2 mt-2">
-                          <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${transit.s <= 20 ? 'bg-green-100 text-green-700' : transit.s <= 30 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                            🚇 서울역 {transit.s}분
-                          </span>
-                          <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${transit.m <= 15 ? 'bg-green-100 text-green-700' : transit.m <= 25 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                            🏢 문정 {transit.m}분
-                          </span>
+                          <div className={`flex-1 flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg ${transit.s <= 20 ? 'bg-green-100 text-green-800' : transit.s <= 30 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
+                            🚇 서울역 <span className="text-sm font-extrabold">약 {transit.s}분</span>
+                          </div>
+                          <div className={`flex-1 flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg ${transit.m <= 15 ? 'bg-green-100 text-green-800' : transit.m <= 25 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
+                            🏢 문정역 <span className="text-sm font-extrabold">약 {transit.m}분</span>
+                          </div>
                         </div>
                       </div>
                       <div className="px-4 py-2 bg-slate-50 border-t border-slate-100">
@@ -929,15 +963,15 @@ function dabangUrl(aptName) {
                             <span className="text-lg font-black leading-none">D</span>다방 매물
                           </a>
                         </div>
-                        {/* 교통 확인 */}
+                        {/* 카카오맵 실시간 경로 확인 */}
                         <div className="flex gap-1.5">
                           <a href={kakaoTransitUrl(item.dong, 'seoul')} target="_blank" rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors border border-slate-200">
-                            🚇 서울역
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 text-[11px] font-bold rounded-lg transition-colors border border-yellow-300">
+                            🗺 서울역 경로
                           </a>
                           <a href={kakaoTransitUrl(item.dong, 'munjeong')} target="_blank" rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors border border-slate-200">
-                            🚇 문정동
+                            className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 text-[11px] font-bold rounded-lg transition-colors border border-yellow-300">
+                            🗺 문정역 경로
                           </a>
                         </div>
                       </div>
