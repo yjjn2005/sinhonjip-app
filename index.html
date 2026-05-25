@@ -384,11 +384,7 @@
       const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
       return `https://m.land.naver.com/search?query=${encodeURIComponent(name)}`;
     }
-    function zigbangUrl(aptName) {
-      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
-      return `https://www.zigbang.com/search?q=${encodeURIComponent(name)}`;
-    }
-    function dabangUrl(aptName) {
+function dabangUrl(aptName) {
       const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
       return `https://www.dabangapp.com/search?query=${encodeURIComponent(name)}`;
     }
@@ -793,22 +789,15 @@
                       </div>
                       {/* 매물 검색 + 교통 버튼 */}
                       <div className="px-3 pb-3 pt-2 flex flex-col gap-2">
-                        {/* 현재 매물 검색 — 3개 사이트 나란히 */}
-                        <div className="grid grid-cols-3 gap-1.5">
+                        {/* 현재 매물 검색 — 네이버 + 다방 */}
+                        <div className="grid grid-cols-2 gap-1.5">
                           <a href={naverLandUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
-                            className="flex flex-col items-center justify-center py-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl transition-colors shadow-sm">
-                            <span className="text-base font-black leading-none">N</span>
-                            <span className="text-[10px] font-bold mt-0.5">네이버</span>
-                          </a>
-                          <a href={zigbangUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
-                            className="flex flex-col items-center justify-center py-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-xl transition-colors shadow-sm">
-                            <span className="text-base font-black leading-none">Z</span>
-                            <span className="text-[10px] font-bold mt-0.5">직방</span>
+                            className="flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl transition-colors shadow-sm font-extrabold text-sm">
+                            <span className="text-lg font-black leading-none">N</span>네이버 매물
                           </a>
                           <a href={dabangUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
-                            className="flex flex-col items-center justify-center py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition-colors shadow-sm">
-                            <span className="text-base font-black leading-none">D</span>
-                            <span className="text-[10px] font-bold mt-0.5">다방</span>
+                            className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition-colors shadow-sm font-extrabold text-sm">
+                            <span className="text-lg font-black leading-none">D</span>다방 매물
                           </a>
                         </div>
                         {/* 교통 확인 */}
