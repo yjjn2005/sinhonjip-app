@@ -378,10 +378,11 @@
       return score;
     }
 
-    // 네이버 부동산 검색 URL
+    // 네이버 부동산 현재매물 검색 URL (네이버 검색 → 부동산 섹션)
+    // ※ 실거래가(MOLIT API)와 현재매물(네이버)은 별개 — 링크 연결만 가능
     function naverLandUrl(aptName, dong) {
-      const query = encodeURIComponent(`${aptName} ${dong || ''}`);
-      return `https://m.land.naver.com/search/result/${query}`;
+      const query = encodeURIComponent(`${aptName} ${dong || ''} 전세 매물`);
+      return `https://search.naver.com/search.naver?where=nexearch&query=${query}`;
     }
 
     // 카카오맵 경로 (출발지: 아파트동, 도착지: 서울역 or 문정동)
@@ -390,18 +391,26 @@
       return `https://map.kakao.com/?sName=${encodeURIComponent((dong||'서울')+'아파트')}&eName=${encodeURIComponent(destName)}&service=subway`;
     }
 
-    // 보증금 등 억 단위 → "6.0억", "5.5억" 형식
+    // 보증금: 실거래가 정확 표기 → "5억 9,500만", "6억", "7억 2,000만"
     const formatPrice = (price) => {
       if (!price || price === 0) return '0';
       if (price >= 10000) {
-        return (price / 10000).toFixed(1) + '억';
+        const uk = Math.floor(price / 10000);
+        const man = price % 10000;
+        if (man === 0) return `${uk}억`;
+        return `${uk}억 ${man.toLocaleString()}만`;
       }
       return price.toLocaleString() + '만';
     };
     // 월이자: 만원 단위로 표시
     const formatInterest = (price) => {
       if (!price || price === 0) return '0만원';
-      if (price >= 10000) return (price / 10000).toFixed(1) + '억원';
+      if (price >= 10000) {
+        const uk = Math.floor(price / 10000);
+        const man = price % 10000;
+        if (man === 0) return `${uk}억원`;
+        return `${uk}억 ${man.toLocaleString()}만원`;
+      }
       return price.toLocaleString() + '만원';
     };
     // ==========================================
@@ -543,11 +552,19 @@
             </div>
           </header>
           <main className="max-w-5xl mx-auto px-3 pt-4 space-y-4">
-            {/* 데모 모드 안내 */}
-            {isDemoMode && !loading && processedData.listings.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
-                <AlertCircle size={14} className="shrink-0" />
-                <span>현재 <strong>샘플 데이터</strong>로 표시 중입니다. 실제 데이터는 공공데이터포털 API 키 등록 후 확인 가능합니다.</span>
+            {/* 데이터 출처 안내 (항상 표시) */}
+            {!loading && processedData.listings.length > 0 && (
+              <div className={`px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 border ${isDemoMode ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`}>
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  {isDemoMode
+                    ? <span><strong>샘플 데이터</strong> 표시 중 — 실제 데이터는 API 키 설정 후 확인 가능</span>
+                    : <span>
+                        <strong>국토교통부 실거래가</strong> (완료된 전월세 거래) · 네이버 버튼은 <strong>현재 매물 검색</strong>으로 연결됩니다<br/>
+                        <span className="text-blue-600">※ 실거래가 ≠ 현재 매물가 — 임장 전 네이버 현재 호가 반드시 확인하세요</span>
+                      </span>
+                  }
+                </div>
               </div>
             )}
             {/* 설정 패널 */}
@@ -776,7 +793,7 @@
                           className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white text-sm font-extrabold rounded-xl transition-colors shadow-sm"
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                          네이버 부동산 매물 보기
+                          네이버에서 현재 매물 검색 →
                         </a>
                         {/* 교통 확인 — 작게 2개 나란히 */}
                         <div className="flex gap-2">
