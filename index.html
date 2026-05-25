@@ -378,11 +378,19 @@
       return score;
     }
 
-    // 네이버 부동산 현재매물 검색 URL (네이버 검색 → 부동산 섹션)
-    // ※ 실거래가(MOLIT API)와 현재매물(네이버)은 별개 — 링크 연결만 가능
-    function naverLandUrl(aptName, dong) {
-      const query = encodeURIComponent(`${aptName} ${dong || ''} 전세 매물`);
-      return `https://search.naver.com/search.naver?where=nexearch&query=${query}`;
+    // 매물 링크 함수들
+    function naverLandUrl(aptName) {
+      // 네이버 부동산 모바일 단지 검색 (아파트명만, 특수문자 제거)
+      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
+      return `https://m.land.naver.com/search?query=${encodeURIComponent(name)}`;
+    }
+    function zigbangUrl(aptName) {
+      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
+      return `https://www.zigbang.com/search?q=${encodeURIComponent(name)}`;
+    }
+    function dabangUrl(aptName) {
+      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
+      return `https://www.dabangapp.com/search?query=${encodeURIComponent(name)}`;
     }
 
     // 카카오맵 경로 (출발지: 아파트동, 도착지: 서울역 or 문정동)
@@ -783,27 +791,35 @@
                           </div>
                         )}
                       </div>
-                      {/* 네이버 부동산 + 교통 버튼 */}
+                      {/* 매물 검색 + 교통 버튼 */}
                       <div className="px-3 pb-3 pt-2 flex flex-col gap-2">
-                        {/* 네이버 매물 — 핵심 버튼, 크게 */}
-                        <a
-                          href={naverLandUrl(item.aptName, item.dong)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white text-sm font-extrabold rounded-xl transition-colors shadow-sm"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                          네이버에서 현재 매물 검색 →
-                        </a>
-                        {/* 교통 확인 — 작게 2개 나란히 */}
-                        <div className="flex gap-2">
+                        {/* 현재 매물 검색 — 3개 사이트 나란히 */}
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <a href={naverLandUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center py-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl transition-colors shadow-sm">
+                            <span className="text-base font-black leading-none">N</span>
+                            <span className="text-[10px] font-bold mt-0.5">네이버</span>
+                          </a>
+                          <a href={zigbangUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center py-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-xl transition-colors shadow-sm">
+                            <span className="text-base font-black leading-none">Z</span>
+                            <span className="text-[10px] font-bold mt-0.5">직방</span>
+                          </a>
+                          <a href={dabangUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                            className="flex flex-col items-center justify-center py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition-colors shadow-sm">
+                            <span className="text-base font-black leading-none">D</span>
+                            <span className="text-[10px] font-bold mt-0.5">다방</span>
+                          </a>
+                        </div>
+                        {/* 교통 확인 */}
+                        <div className="flex gap-1.5">
                           <a href={kakaoTransitUrl(item.dong, 'seoul')} target="_blank" rel="noopener noreferrer"
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors border border-slate-200">
-                            🚇 서울역 교통
+                            🚇 서울역
                           </a>
                           <a href={kakaoTransitUrl(item.dong, 'munjeong')} target="_blank" rel="noopener noreferrer"
                             className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-colors border border-slate-200">
-                            🚇 문정동 교통
+                            🚇 문정동
                           </a>
                         </div>
                       </div>
