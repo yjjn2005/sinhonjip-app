@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="서울시 신혼부부 임차보증금 이자지원을 활용한 전세 탐색 앱">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>신혼집 부동산 앱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0d0d1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-card-hover: #1a2744;
+  --accent-gold: #e2b44f;
+  --accent-gold-light: #f0d68a;
+  --accent-gold-dark: #c9952e;
+  --accent-blue: #4a90d9;
+  --accent-blue-light: #6aabf0;
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b8;
+  --text-muted: #6b6b80;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-accent: rgba(226,180,79,0.25);
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-card-hover: 0 12px 48px rgba(0,0,0,0.5);
+  --shadow-gold: 0 4px 24px rgba(226,180,79,0.15);
+  --gradient-gold: linear-gradient(135deg, #e2b44f 0%, #f0d68a 50%, #c9952e 100%);
+  --gradient-card: linear-gradient(145deg, #1a2744 0%, #16213e 100%);
+  --gradient-hero: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 50%, #16213e 100%);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --font-base: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --transition-fast: 0.2s cubic-bezier(0.4,0,0.2,1);
+  --transition-med: 0.4s cubic-bezier(0.4,0,0.2,1);
+  --transition-slow: 0.6s cubic-bezier(0.22,1,0.36,1);
+  --max-width: 960px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-base);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--accent-gold-dark); border-radius: 3px; }
+
+/* ── Utility ── */
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 20px; }
+
+section {
+  padding: 72px 0;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+section.visible { opacity: 1; transform: translateY(0); }
+
+.section-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 36px;
+  font-weight: 300;
+}
+
+/* ── Hero / Header ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--gradient-hero);
+  padding: 40px 20px;
+  overflow: hidden;
+  opacity: 1;
+  transform: none;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(226,180,79,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(74,144,217,0.04) 0%, transparent 50%);
+  animation: heroGlow 12s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes heroGlow {
+  0% { transform: translate(0,0) scale(1); }
+  100% { transform: translate(-3%,2%) scale(1.05); }
+}
+
+.hero-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 900;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.hero-subtitle {
+  font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+  color: var(--text-secondary);
+  font-weight: 300;
+  max-width: 500px;
+  margin: 0 auto 32px;
+  line-height: 1.8;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(226,180,79,0.1);
+  border: 1px solid var(--border-accent);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--accent-gold-light);
+  margin-bottom: 40px;
+}
+
+.hero-badge .dot {
+  width: 6px; height: 6px;
+  background: #4ade80;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gradient-gold);
+  color: #1a1a2e;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-gold);
+  cursor: pointer;
+  border: none;
+}
+
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(226,180,79,0.3);
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px; height: 40px;
+  border: 2px solid rgba(226,180,79,0.3);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.scroll-indicator::after {
+  content: '';
+  width: 3px; height: 8px;
+  background: var(--accent-gold);
+  border-radius: 2px;
+  margin-top: 6px;
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+@keyframes scrollBounce {
+  0%,100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(12px); opacity: 0.3; }
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  transition: var(--transition-med);
+  box-shadow: var(--shadow-card);
+}
+
+.card:hover {
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-4px);
+}
+
+/* ── Filter Section ── */
+.filter-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .filter-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.filter-group select,
+.filter-group input[type="number"] {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.filter-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0a0b8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(226,180,79,0.12);
+}
+
+/* Toggle */
+.toggle-group {
+  display: flex;
+  gap: 0;
+  background: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-base);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-weight: 500;
+}
+
+.toggle-btn.active {
+  background: var(--accent-gold);
+  color: var(--bg-primary);
+  font-weight: 700;
+}
+
+/* Slider */
+.slider-wrap {
+  position: relative;
+}
+
+.slider-value {
+  text-align: right;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 4px;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, var(--accent-gold) 0%, var(--accent-gold) var(--pct, 50%), #2a2a40 var(--pct, 50%), #2a2a40 100%);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(226,180,79,0.4);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Area chips */
+.area-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.area-chip {
+  padding: 8px 18px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+}
+
+.area-chip.active,
+.area-chip:hover {
+  background: rgba(226,180,79,0.12);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* ── Calculator ── */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .calc-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.calc-input-group { margin-bottom: 20px; }
+
+.calc-input-group label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.calc-input-group input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-base);
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.calc-input-group input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(226,180,79,0.12);
+}
+
+.calc-result {
+  background: linear-gradient(135deg, rgba(226,180,79,0.08) 0%, rgba(74,144,217,0.05) 100%);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  padding: 24px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.result-row:last-child { border-bottom: none; }
+
+.result-label {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.result-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.result-value.highlight {
+  color: var(--accent-gold);
+  font-size: 1.15rem;
+}
+
+.result-value.savings {
+  color: #4ade80;
+}
+
+.income-bracket-indicator {
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: rgba(74,144,217,0.08);
+  border: 1px solid rgba(74,144,217,0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: var(--accent-blue-light);
+  line-height: 1.6;
+}
+
+/* ── Recommended Areas ── */
+.rec-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .rec-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.rec-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.rec-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rec-icon {
+  width: 44px; height: 44px;
+  background: rgba(226,180,79,0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.rec-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.rec-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.rec-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rec-area-tag {
+  padding: 6px 14px;
+  background: rgba(226,180,79,0.08);
+  border: 1px solid var(--border-accent);
+  border-radius: 50px;
+  font-size: 0.82rem;
+  color: var(--accent-gold-light);
+  font-weight: 500;
+}
+
+.rec-area-tag .time {
+  color: var(--text-muted);
+  font-weight: 300;
+  margin-left: 4px;
+}
+
+/* ── Listings ── */
+.listings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .listings-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+}
+
+.listing-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.listing-badge {
+  position: absolute;
+  top: 16px; right: 16px;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.listing-badge.jeonse {
+  background: rgba(74,144,217,0.15);
+  color: var(--accent-blue-light);
+  border: 1px solid rgba(74,144,217,0.3);
+}
+
+.listing-badge.wolse {
+  background: rgba(226,180,79,0.15);
+  color: var(--accent-gold-light);
+  border: 1px solid rgba(226,180,79,0.3);
+}
+
+.listing-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  padding-right: 60px;
+}
+
+.listing-location {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.listing-specs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.listing-spec {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.listing-spec .spec-icon {
+  font-size: 0.9rem;
+}
+
+.listing-price {
+  font-size: 1.2rem;
+  font-weight: 900;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.listing-price-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.listing-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.listing-tag {
+  padding: 3px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Timeline ── */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent-gold) 0%, var(--accent-blue) 100%);
+  border-radius: 1px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 32px;
+  padding: 20px 24px;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: var(--transition-med);
+}
+
+.timeline-item:hover {
+  border-color: var(--border-accent);
+  transform: translateX(4px);
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;
+  top: 26px;
+  width: 12px; height: 12px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  border: 3px solid var(--bg-primary);
+  box-shadow: 0 0 12px rgba(226,180,79,0.4);
+}
+
+.timeline-date {
+  font-size: 0.78rem;
+  color: var(--accent-gold);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.timeline-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.timeline-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── D-Day Counter ── */
+.dday-banner {
+  text-align: center;
+  padding: 32px;
+  background: linear-gradient(135deg, rgba(226,180,79,0.1) 0%, rgba(74,144,217,0.06) 100%);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  margin-bottom: 40px;
+}
+
+.dday-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.dday-date {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.dday-count {
+  font-size: 2.4rem;
+  font-weight: 900;
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Footer ── */
+footer {
+  padding: 48px 0 32px;
+  text-align: center;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: var(--transition-fast);
+}
+
+.footer-link:hover { color: var(--accent-gold); }
+
+.footer-copy {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ── Nav (sticky) ── */
+.top-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(13,13,26,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  transform: translateY(-100%);
+  transition: transform 0.35s ease;
+}
+
+.top-nav.visible { transform: translateY(0); }
+
+.nav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent-gold);
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.nav-link:hover { color: var(--accent-gold); }
+
+@media (max-width: 500px) {
+  .nav-links { display: none; }
+}
+
+/* ── Stats Row ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px 8px;
+  background: var(--gradient-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.stat-number {
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 900;
+  color: var(--accent-gold);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Sticky Nav ── -->
+<nav class="top-nav" id="topNav">
+  <div class="nav-inner">
+    <span class="nav-brand">&#127968; 신혼집 부동산</span>
+    <div class="nav-links">
+      <a href="#filter" class="nav-link">필터</a>
+      <a href="#calculator" class="nav-link">계산기</a>
+      <a href="#recommend" class="nav-link">추천</a>
+      <a href="#listings" class="nav-link">매물</a>
+      <a href="#timeline" class="nav-link">타임라인</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero visible">
+  <div class="hero-icon">&#127968;</div>
+  <h1>신혼집 부동산 앱</h1>
+  <p class="hero-subtitle">서울시 신혼부부 임차보증금 이자지원 활용<br>전세 탐색 &amp; 대출 계산</p>
+  <div class="hero-badge">
+    <span class="dot"></span>
+    서울시 25개 구 실시간 탐색
+  </div>
+  <a href="#filter" class="hero-cta">&#128269; 탐색 시작하기</a>
+  <div class="scroll-indicator"></div>
+</section>
+
+<!-- ── Stats ── -->
+<section id="stats">
+  <div class="container">
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-number">25</div>
+        <div class="stat-label">서울시 자치구</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">3.0%</div>
+        <div class="stat-label">최대 이자지원</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">7억</div>
+        <div class="stat-label">보증금 상한</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Filter ── -->
+<section id="filter">
+  <div class="container">
+    <h2 class="section-title">&#128270; 매물 탐색 필터</h2>
+    <p class="section-subtitle">원하는 조건을 설정하여 최적의 신혼집을 찾아보세요</p>
+
+    <div class="card">
+      <div class="filter-grid">
+        <!-- 서울시 구 선택 -->
+        <div class="filter-group">
+          <label for="districtSelect">서울시 자치구</label>
+          <select id="districtSelect">
+            <option value="">전체 (25개 구)</option>
+            <option value="강남구">강남구</option>
+            <option value="강동구">강동구</option>
+            <option value="강북구">강북구</option>
+            <option value="강서구">강서구</option>
+            <option value="관악구">관악구</option>
+            <option value="광진구">광진구</option>
+            <option value="구로구">구로구</option>
+            <option value="금천구">금천구</option>
+            <option value="노원구">노원구</option>
+            <option value="도봉구">도봉구</option>
+            <option value="동대문구">동대문구</option>
+            <option value="동작구">동작구</option>
+            <option value="마포구">마포구</option>
+            <option value="서대문구">서대문구</option>
+            <option value="서초구">서초구</option>
+            <option value="성동구">성동구</option>
+            <option value="성북구">성북구</option>
+            <option value="송파구">송파구</option>
+            <option value="양천구">양천구</option>
+            <option value="영등포구">영등포구</option>
+            <option value="용산구">용산구</option>
+            <option value="은평구">은평구</option>
+            <option value="종로구">종로구</option>
+            <option value="중구">중구</option>
+            <option value="중랑구">중랑구</option>
+          </select>
+        </div>
+
+        <!-- 거래유형 -->
+        <div class="filter-group">
+          <label>거래유형</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" data-type="전세" onclick="setTradeType(this)">전세</button>
+            <button class="toggle-btn" data-type="월세" onclick="setTradeType(this)">월세</button>
+          </div>
+        </div>
+
+        <!-- 보증금 상한 -->
+        <div class="filter-group" style="grid-column: 1 / -1;">
+          <label>보증금 상한</label>
+          <div class="slider-wrap">
+            <div class="slider-value" id="depositDisplay">3억 5,000만원</div>
+            <input type="range" id="depositSlider" min="0" max="70000" step="1000" value="35000"
+                   oninput="updateDeposit(this)">
+          </div>
+        </div>
+
+        <!-- 전용면적 -->
+        <div class="filter-group" style="grid-column: 1 / -1;">
+          <label>전용면적</label>
+          <div class="area-chips">
+            <span class="area-chip active" onclick="setArea(this, 59)">59&#13217; (24평)</span>
+            <span class="area-chip" onclick="setArea(this, 84)">84&#13217; (34평)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Calculator ── -->
+<section id="calculator">
+  <div class="container">
+    <h2 class="section-title">&#128202; 대출 계산기</h2>
+    <p class="section-subtitle">서울시 신혼부부 임차보증금 이자지원 혜택을 계산해보세요</p>
+
+    <div class="calc-grid">
+      <div class="card">
+        <h3 style="font-size:1rem; margin-bottom:20px; color:var(--text-primary);">&#128221; 정보 입력</h3>
+        <div class="calc-input-group">
+          <label for="loanAmount">대출금액 (만원)</label>
+          <input type="number" id="loanAmount" value="30000" placeholder="30000" oninput="calculate()">
+        </div>
+        <div class="calc-input-group">
+          <label for="annualIncome">부부합산 연소득 (만원)</label>
+          <input type="number" id="annualIncome" value="7000" placeholder="7000" oninput="calculate()">
+        </div>
+        <div class="income-bracket-indicator" id="bracketInfo">
+          &#128161; 소득구간: 6천~8천만원<br>
+          서울시 이자지원 1.5% &middot; 본인부담 3.0%
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:1rem; margin-bottom:20px; color:var(--text-primary);">&#128176; 계산 결과</h3>
+        <div class="calc-result">
+          <div class="result-row">
+            <span class="result-label">시중 금리 (기준)</span>
+            <span class="result-value">4.5%</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">서울시 이자지원</span>
+            <span class="result-value highlight" id="supportRate">1.5%</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">본인부담 금리</span>
+            <span class="result-value" id="selfRate">3.0%</span>
+          </div>
+          <div class="result-row" style="border-top:1px solid rgba(226,180,79,0.15); padding-top:16px; margin-top:8px;">
+            <span class="result-label">시중금리 월 이자</span>
+            <span class="result-value" id="marketMonthly">112.5만원</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">지원 후 월 이자</span>
+            <span class="result-value highlight" id="supportMonthly">75.0만원</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">월 절감액</span>
+            <span class="result-value savings" id="monthlySavings">&#9660; 37.5만원</span>
+          </div>
+          <div class="result-row">
+            <span class="result-label">연간 절감액</span>
+            <span class="result-value savings" id="annualSavings">&#9660; 450.0만원</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Recommended Areas ── -->
+<section id="recommend">
+  <div class="container">
+    <h2 class="section-title">&#128205; 추천 거주 지역</h2>
+    <p class="section-subtitle">직장 위치 기반 출퇴근 최적 지역 추천</p>
+
+    <div class="rec-grid">
+      <div class="card rec-card">
+        <div class="rec-header">
+          <div class="rec-icon">&#128644;</div>
+          <div>
+            <div class="rec-title">직장 A &mdash; 서울역</div>
+            <div class="rec-subtitle">1호선 / 4호선 / 경의중앙선</div>
+          </div>
+        </div>
+        <div class="rec-areas">
+          <span class="rec-area-tag">용산구 <span class="time">10분</span></span>
+          <span class="rec-area-tag">마포구 <span class="time">15분</span></span>
+          <span class="rec-area-tag">중구 <span class="time">5분</span></span>
+        </div>
+      </div>
+
+      <div class="card rec-card">
+        <div class="rec-header">
+          <div class="rec-icon">&#128647;</div>
+          <div>
+            <div class="rec-title">직장 B &mdash; 문정동</div>
+            <div class="rec-subtitle">8호선 / 3호선 환승</div>
+          </div>
+        </div>
+        <div class="rec-areas">
+          <span class="rec-area-tag">송파구 <span class="time">10분</span></span>
+          <span class="rec-area-tag">강동구 <span class="time">20분</span></span>
+          <span class="rec-area-tag">성동구 <span class="time">30분</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Listings ── -->
+<section id="listings">
+  <div class="container">
+    <h2 class="section-title">&#127970; 주요 매물</h2>
+    <p class="section-subtitle">관심 단지 시세 정보 (샘플 데이터)</p>
+
+    <div class="listings-grid">
+      <!-- 문정래미안 -->
+      <div class="card listing-card">
+        <span class="listing-badge jeonse">전세</span>
+        <div class="listing-name">문정래미안</div>
+        <div class="listing-location">송파구 문정동</div>
+        <div class="listing-specs">
+          <span class="listing-spec"><span class="spec-icon">&#128207;</span> 59&#13217;</span>
+          <span class="listing-spec"><span class="spec-icon">&#128197;</span> 2004년</span>
+          <span class="listing-spec"><span class="spec-icon">&#127970;</span> 2,678세대</span>
+        </div>
+        <div class="listing-price">5억 ~ 7억</div>
+        <div class="listing-price-sub">전세가율 약 62%</div>
+        <div class="listing-tags">
+          <span class="listing-tag">8호선 문정역</span>
+          <span class="listing-tag">래미안</span>
+          <span class="listing-tag">대단지</span>
+        </div>
+      </div>
+
+      <!-- 구파발 9단지 -->
+      <div class="card listing-card">
+        <span class="listing-badge jeonse">전세</span>
+        <div class="listing-name">구파발 9단지 래미안</div>
+        <div class="listing-location">은평구 진관동</div>
+        <div class="listing-specs">
+          <span class="listing-spec"><span class="spec-icon">&#128207;</span> 59&#13217;</span>
+          <span class="listing-spec"><span class="spec-icon">&#128197;</span> 2011년</span>
+          <span class="listing-spec"><span class="spec-icon">&#127970;</span> 1,491세대</span>
+        </div>
+        <div class="listing-price">5.0억 ~ 5.4억</div>
+        <div class="listing-price-sub">전세가율 약 70%</div>
+        <div class="listing-tags">
+          <span class="listing-tag">3호선 구파발</span>
+          <span class="listing-tag">래미안</span>
+          <span class="listing-tag">신혼선호</span>
+        </div>
+      </div>
+
+      <!-- 올림픽훼밀리 -->
+      <div class="card listing-card">
+        <span class="listing-badge wolse">보증부월세</span>
+        <div class="listing-name">올림픽훼밀리타운</div>
+        <div class="listing-location">송파구 방이동</div>
+        <div class="listing-specs">
+          <span class="listing-spec"><span class="spec-icon">&#128207;</span> 84&#13217;</span>
+          <span class="listing-spec"><span class="spec-icon">&#128197;</span> 1988년</span>
+          <span class="listing-spec"><span class="spec-icon">&#127970;</span> 4,786세대</span>
+        </div>
+        <div class="listing-price">보증금 4억 / 월 149만</div>
+        <div class="listing-price-sub">올림픽공원 인접 대단지</div>
+        <div class="listing-tags">
+          <span class="listing-tag">5호선 올림픽공원</span>
+          <span class="listing-tag">리모델링</span>
+          <span class="listing-tag">84&#13217;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Timeline ── -->
+<section id="timeline">
+  <div class="container">
+    <h2 class="section-title">&#128197; 타임라인</h2>
+    <p class="section-subtitle">결혼 준비 일정 &amp; 주요 마일스톤</p>
+
+    <div class="dday-banner">
+      <div class="dday-label">결혼식</div>
+      <div class="dday-date">2026년 11월 14일 (토)</div>
+      <div class="dday-count" id="ddayCount">D-538</div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">2026년 5월</div>
+        <div class="timeline-title">신혼집 탐색 시작</div>
+        <div class="timeline-desc">서울시 이자지원 사업 조건 확인, 관심 단지 리스트업, 앱 MVP 개발 착수</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2026년 6~7월</div>
+        <div class="timeline-title">실거주지 탐색 &amp; 임장</div>
+        <div class="timeline-desc">후보 단지 방문, 전세 시세 확인, 중개사 상담, 직장 출퇴근 동선 체크</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2026년 8~9월</div>
+        <div class="timeline-title">전세 계약 &amp; 대출 신청</div>
+        <div class="timeline-desc">전세 계약 체결, 서울시 이자지원 사업 신청, 전세자금 대출 실행</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2026년 10월</div>
+        <div class="timeline-title">이사 &amp; 입주 준비</div>
+        <div class="timeline-desc">전입신고, 확정일자, 가전/가구 입고, 인테리어 마무리</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">2026년 11월 14일</div>
+        <div class="timeline-title">&#128144; 결혼식</div>
+        <div class="timeline-desc">행복한 결혼식 후 신혼집에서 새로운 시작!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com" class="footer-link" target="_blank" rel="noopener">&#128187; GitHub</a>
+      <a href="#filter" class="footer-link">매물 탐색</a>
+      <a href="#calculator" class="footer-link">대출 계산기</a>
+      <a href="#timeline" class="footer-link">타임라인</a>
+    </div>
+    <p class="footer-copy">&copy; 2026 신혼집 부동산 앱 &middot; MVP v1.0 &middot; Made with &#10084;&#65039; for newlyweds</p>
+  </div>
+</footer>
+
+<script>
+/* ── Intersection Observer for fade-in ── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('section:not(.hero)').forEach(s => observer.observe(s));
+
+/* ── Sticky Nav ── */
+let lastScroll = 0;
+const topNav = document.getElementById('topNav');
+window.addEventListener('scroll', () => {
+  const y = window.scrollY;
+  topNav.classList.toggle('visible', y > 500);
+  lastScroll = y;
+}, { passive: true });
+
+/* ── Deposit slider ── */
+function updateDeposit(el) {
+  const v = parseInt(el.value);
+  const pct = (v / 70000) * 100;
+  el.style.setProperty('--pct', pct + '%');
+  const eok = Math.floor(v / 10000);
+  const man = v % 10000;
+  let text = '';
+  if (eok > 0) text += eok + '억';
+  if (man > 0) text += ' ' + man.toLocaleString() + '만원';
+  if (eok === 0 && man === 0) text = '0원';
+  else if (man === 0) text += '원';
+  document.getElementById('depositDisplay').textContent = text;
+}
+
+// Init slider visual
+(function(){
+  const sl = document.getElementById('depositSlider');
+  sl.style.setProperty('--pct', (parseInt(sl.value)/70000*100)+'%');
+})();
+
+/* ── Trade type toggle ── */
+function setTradeType(btn) {
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ── Area chip ── */
+function setArea(chip, size) {
+  chip.parentElement.querySelectorAll('.area-chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+}
+
+/* ── Calculator ── */
+function getBracket(income) {
+  if (income <= 2000) return { support: 3.0, self: 1.5, label: '2천만원 이하' };
+  if (income <= 4000) return { support: 2.5, self: 2.0, label: '2천~4천만원' };
+  if (income <= 6000) return { support: 2.0, self: 2.5, label: '4천~6천만원' };
+  if (income <= 8000) return { support: 1.5, self: 3.0, label: '6천~8천만원' };
+  if (income <= 13000) return { support: 1.0, self: 3.5, label: '8천만~1.3억' };
+  return { support: 0, self: 4.5, label: '지원 대상 외' };
+}
+
+function calculate() {
+  const loan = parseFloat(document.getElementById('loanAmount').value) || 0;
+  const income = parseFloat(document.getElementById('annualIncome').value) || 0;
+  const bracket = getBracket(income);
+  const marketRate = 4.5;
+
+  const marketAnnual = loan * (marketRate / 100);
+  const selfAnnual = loan * (bracket.self / 100);
+  const marketMonthly = marketAnnual / 12;
+  const selfMonthly = selfAnnual / 12;
+  const monthlySave = marketMonthly - selfMonthly;
+  const annualSave = marketAnnual - selfAnnual;
+
+  document.getElementById('supportRate').textContent = bracket.support.toFixed(1) + '%';
+  document.getElementById('selfRate').textContent = bracket.self.toFixed(1) + '%';
+  document.getElementById('marketMonthly').textContent = formatMan(marketMonthly);
+  document.getElementById('supportMonthly').textContent = formatMan(selfMonthly);
+  document.getElementById('monthlySavings').textContent = '▼ ' + formatMan(monthlySave);
+  document.getElementById('annualSavings').textContent = '▼ ' + formatMan(annualSave);
+
+  const info = document.getElementById('bracketInfo');
+  if (bracket.support === 0) {
+    info.innerHTML = '⚠️ 연소득 1.3억 초과: 이자지원 대상이 아닙니다';
+    info.style.borderColor = 'rgba(239,68,68,0.3)';
+    info.style.background = 'rgba(239,68,68,0.08)';
+    info.style.color = '#f87171';
+  } else {
+    info.innerHTML = '💡 소득구간: ' + bracket.label + '<br>서울시 이자지원 ' + bracket.support.toFixed(1) + '% · 본인부담 ' + bracket.self.toFixed(1) + '%';
+    info.style.borderColor = 'rgba(74,144,217,0.2)';
+    info.style.background = 'rgba(74,144,217,0.08)';
+    info.style.color = '#6aabf0';
+  }
+}
+
+function formatMan(v) {
+  return v.toFixed(1) + '만원';
+}
+
+calculate();
+
+/* ── D-Day Counter ── */
+function updateDday() {
+  const wedding = new Date(2026, 10, 14); // Nov 14, 2026
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const diff = Math.ceil((wedding - today) / (1000 * 60 * 60 * 24));
+  const el = document.getElementById('ddayCount');
+  if (diff > 0) {
+    el.textContent = 'D-' + diff;
+  } else if (diff === 0) {
+    el.textContent = 'D-Day!';
+  } else {
+    el.textContent = 'D+' + Math.abs(diff);
+  }
+}
+updateDday();
+</script>
+</body>
+</html>
