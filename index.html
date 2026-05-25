@@ -372,12 +372,29 @@
       const handleSearch = async () => {
         setLoading(true);
         setError(null);
+        const dealYmd = selectedMonth.replace('-', '');
         try {
-          const dealYmd = selectedMonth.replace('-', '');
-          setIsDemoMode(isInvalidKey(apiKey));
-
-          const data = await fetchAptRent(selectedGu, dealYmd, apiKey);
-          setOriginalListings(data);
+          if (isInvalidKey(apiKey)) {
+            setIsDemoMode(true);
+            setOriginalListings(getDemoData(selectedGu, dealYmd));
+          } else {
+            setIsDemoMode(false);
+            try {
+              const data = await fetchAptRent(selectedGu, dealYmd, apiKey);
+              if (data && data.length > 0) {
+                setOriginalListings(data);
+              } else {
+                // 데이터 없으면 데모 데이터로 표시
+                setIsDemoMode(true);
+                setOriginalListings(getDemoData(selectedGu, dealYmd));
+              }
+            } catch (apiErr) {
+              // CORS/API 오류 시 데모 데이터로 자동 폴백
+              console.warn('API 오류, 데모 데이터로 전환:', apiErr.message);
+              setIsDemoMode(true);
+              setOriginalListings(getDemoData(selectedGu, dealYmd));
+            }
+          }
         } catch (err) {
           setError(err.message);
           setOriginalListings([]);
@@ -409,31 +426,58 @@
       return (
         <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-12">
           {/* 헤더 */}
-          <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-            <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+            <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
               <div className="flex items-center gap-2 text-blue-600">
-                <Home size={28} className="stroke-[2.5]" />
-                <h1 className="text-xl font-bold tracking-tight">유태현 신혼집</h1>
+                <Home size={24} className="stroke-[2.5]" />
+                <h1 className="text-lg font-bold tracking-tight">유태현 신혼집</h1>
+                {isDemoMode && (
+                  <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">데모</span>
+                )}
               </div>
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-                title="설정"
-              >
-                <Settings size={20} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    const url = window.location.href;
+                    if (navigator.share) {
+                      navigator.share({ title: '유태현 신혼집 - 전월세 검색', url });
+                    } else {
+                      navigator.clipboard.writeText(url).then(() => alert('링크가 복사됐습니다!'));
+                    }
+                  }}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-slate-900 text-xs font-bold rounded-full transition-colors"
+                  title="카카오톡 공유"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.477 2 11c0 2.9 1.583 5.47 4 7.08V21l2.98-1.49C10.27 19.83 11.12 20 12 20c5.523 0 10-3.477 10-9S17.523 3 12 3z"/></svg>
+                  공유
+                </button>
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+                  title="설정"
+                >
+                  <Settings size={18} />
+                </button>
+              </div>
             </div>
           </header>
-          <main className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+          <main className="max-w-5xl mx-auto px-3 pt-4 space-y-4">
+            {/* 데모 모드 안내 */}
+            {isDemoMode && !loading && processedData.listings.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>현재 <strong>샘플 데이터</strong>로 표시 중입니다. 실제 데이터는 공공데이터포털 API 키 등록 후 확인 가능합니다.</span>
+              </div>
+            )}
             {/* 설정 패널 */}
             {showSettings && (
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                 <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
                   <Key size={16} className="text-slate-500"/> API 키 설정
                 </h2>
                 <p className="text-xs text-slate-500 mb-3 leading-relaxed">
                   공공데이터포털의 <strong>'국토교통부_아파트전월세 자료'</strong> 인증키를 입력하세요.<br/>
-                  비워두면 <strong>데모 모드(가상 데이터)</strong>로 작동합니다.
+                  비워두면 <strong>샘플 데이터</strong>로 작동합니다.
                 </p>
                 <input
                   type="text"
@@ -445,17 +489,17 @@
               </div>
             )}
             {/* 검색 패널 */}
-            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+              <div className="grid grid-cols-2 gap-3">
                 {/* 자치구 선택 */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-                    <MapPin size={14} /> 자치구
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                    <MapPin size={12} /> 자치구
                   </label>
                   <select
                     value={selectedGu}
                     onChange={(e) => setSelectedGu(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     {Object.entries(SEOUL_GU).map(([guName, code]) => (
                       <option key={code} value={code}>{guName}</option>
@@ -463,32 +507,30 @@
                   </select>
                 </div>
                 {/* 계약연월 선택 */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
-                    <Calendar size={14} /> 계약연월
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                    <Calendar size={12} /> 계약연월
                   </label>
                   <input
                     type="month"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
-                {/* 조회(업데이트) 버튼 */}
-                <div className="flex items-end">
-                  <button
-                    onClick={handleSearch}
-                    disabled={loading}
-                    className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <><Zap size={18} /> 업데이트</>
-                    )}
-                  </button>
-                </div>
               </div>
+              {/* 조회 버튼 */}
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="w-full mt-3 h-11 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <><Zap size={16} /> 매물 조회</>
+                )}
+              </button>
             </div>
             {/* 에러 메시지 */}
             {error && (
@@ -522,77 +564,60 @@
             )}
             {/* 매물 리스트 */}
             {!loading && !error && processedData.listings.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {processedData.listings.map((item, idx) => {
                   const isLoanEligible = checkLoanEligibility(item.deposit);
                   const loanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
                   const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
                   return (
-                    <div key={idx} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
-                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className={`text-xs font-bold px-2 py-1 rounded ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
+                    <div key={idx} className="bg-white rounded-xl border border-slate-200 overflow-hidden active:shadow-md transition-shadow flex flex-col">
+                      <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
                             {item.type}
                           </span>
                           {item.brokerCount > 1 && (
-                            <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-slate-200 text-slate-600 flex items-center gap-1" title="유사 매물이 중복 접수된 횟수">
-                              <Layers size={10} /> 중복 {item.brokerCount}건 통합
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 flex items-center gap-0.5">
+                              <Layers size={9} /> {item.brokerCount}건 통합
                             </span>
                           )}
                         </div>
-                        <h3 className="font-bold text-lg text-slate-800 truncate" title={item.aptName}>
+                        <h3 className="font-bold text-base text-slate-800 truncate" title={item.aptName}>
                           {item.aptName}
                         </h3>
-                        <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                          <MapPin size={12} /> {item.dong}
+                        <p className="text-xs text-slate-400 flex items-center gap-0.5 mt-0.5">
+                          <MapPin size={11} /> {item.dong}
                         </p>
                       </div>
-                      <div className="p-4 space-y-4 flex-1">
-                        <div>
-                          <div className="flex items-end gap-2">
-                            <span className="text-xs text-slate-500 font-medium pb-1">보증금</span>
-                            <span className="text-2xl font-extrabold tracking-tight text-slate-900">
-                              {formatPrice(item.deposit)}
-                            </span>
-                          </div>
-                          {item.monthlyRent > 0 && (
-                            <div className="flex items-end gap-2 mt-1">
-                              <span className="text-xs text-slate-500 font-medium pb-0.5">월세</span>
-                              <span className="text-lg font-bold text-orange-600">
-                                {formatPrice(item.monthlyRent)}
-                              </span>
-                            </div>
-                          )}
+                      <div className="px-4 py-3 flex-1">
+                        <div className="flex items-baseline gap-1.5 mb-1">
+                          <span className="text-xs text-slate-400">보증금</span>
+                          <span className="text-xl font-extrabold text-slate-900">
+                            {formatPrice(item.deposit)}
+                          </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-y-2 text-sm">
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <div className="w-5 flex justify-center text-slate-400"><Building2 size={14} /></div>
-                            {item.area}㎡
+                        {item.monthlyRent > 0 && (
+                          <div className="flex items-baseline gap-1.5 mb-2">
+                            <span className="text-xs text-slate-400">월세</span>
+                            <span className="text-base font-bold text-orange-600">{formatPrice(item.monthlyRent)}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <div className="w-5 flex justify-center text-slate-400"><Layers size={14} /></div>
-                            {item.floor}층
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-600">
-                            <div className="w-5 flex justify-center text-slate-400"><Calendar size={14} /></div>
-                            {item.buildYear}년식
-                          </div>
-                          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-                            계약일: {item.dealMonth}.{item.dealDay}
-                          </div>
+                        )}
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
+                          <span className="flex items-center gap-1"><Building2 size={12} />{item.area}㎡</span>
+                          <span className="flex items-center gap-1"><Layers size={12} />{item.floor}층</span>
+                          <span className="flex items-center gap-1"><Calendar size={12} />{item.buildYear}년식</span>
+                          <span>계약 {item.dealMonth}.{item.dealDay}</span>
                         </div>
                       </div>
-                      <div className="p-3 bg-slate-50 border-t border-slate-100">
+                      <div className="px-4 py-2 bg-slate-50 border-t border-slate-100">
                         {isLoanEligible ? (
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center justify-between text-xs font-semibold text-green-700">
-                              <span className="flex items-center gap-1">
-                                <CheckCircle2 size={14} /> 서울시 신혼부부 이자지원 대상
-                              </span>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="text-xs font-semibold text-green-700 flex items-center gap-1">
+                              <CheckCircle2 size={12} /> 서울시 신혼부부 이자지원 대상
                             </div>
-                            <div className="text-[11px] text-slate-500 flex justify-between">
-                              <span>예상 대출 80%: {formatPrice(loanAmount)}</span>
-                              <span>월 이자 약 {formatPrice(monthlyInterest)}원</span>
+                            <div className="text-[11px] text-slate-400 flex justify-between">
+                              <span>대출 80%: {formatPrice(loanAmount)}</span>
+                              <span>월이자 약 {formatPrice(monthlyInterest)}원</span>
                             </div>
                           </div>
                         ) : (
@@ -607,10 +632,16 @@
               </div>
             )}
             {!loading && !error && processedData.listings.length === 0 && (
-              <div className="text-center py-20 text-slate-500 bg-white rounded-xl border border-slate-200">
-                <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-lg font-medium">해당 조건의 실거래가 내역이 없습니다.</p>
-                <p className="text-sm mt-1">다른 자치구나 기간을 선택해보세요.</p>
+              <div className="text-center py-16 text-slate-500 bg-white rounded-xl border border-slate-200">
+                <Building2 size={40} className="mx-auto text-slate-300 mb-3" />
+                <p className="font-medium">해당 조건의 매물이 없습니다.</p>
+                <p className="text-sm mt-1 text-slate-400">다른 자치구나 기간을 선택해보세요.</p>
+              </div>
+            )}
+            {loading && (
+              <div className="text-center py-16">
+                <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-slate-500">매물 데이터를 불러오는 중...</p>
               </div>
             )}
           </main>
