@@ -2,1351 +2,895 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="서울시 신혼부부 임차보증금 이자지원을 활용한 전세 탐색 앱">
-<meta name="theme-color" content="#1a1a2e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.json">
-<title>신혼집 부동산 앱</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>신혼집 탐색기 🏠</title>
 <style>
-:root {
---bg-primary: #0d0d1a;
---bg-secondary: #1a1a2e;
---bg-card: #16213e;
---bg-card-hover: #1a2744;
---accent-gold: #e2b44f;
---accent-gold-light: #f0d68a;
---accent-gold-dark: #c9952e;
---accent-blue: #4a90d9;
---accent-blue-light: #6aabf0;
---text-primary: #f0f0f5;
---text-secondary: #a0a0b8;
---text-muted: #6b6b80;
---border-subtle: rgba(255,255,255,0.06);
---border-accent: rgba(226,180,79,0.25);
---shadow-card: 0 8px 32px rgba(0,0,0,0.4);
---shadow-card-hover: 0 12px 48px rgba(0,0,0,0.5);
---shadow-gold: 0 4px 24px rgba(226,180,79,0.15);
---gradient-gold: linear-gradient(135deg, #e2b44f 0%, #f0d68a 50%, #c9952e 100%);
---gradient-card: linear-gradient(145deg, #1a2744 0%, #16213e 100%);
---gradient-hero: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 50%, #16213e 100%);
---radius-sm: 8px;
---radius-md: 14px;
---radius-lg: 20px;
---radius-xl: 28px;
---font-base: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
---transition-fast: 0.2s cubic-bezier(0.4,0,0.2,1);
---transition-med: 0.4s cubic-bezier(0.4,0,0.2,1);
---transition-slow: 0.6s cubic-bezier(0.22,1,0.36,1);
---max-width: 960px;
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html {
-scroll-behavior: smooth;
--webkit-text-size-adjust: 100%;
-}
-
-body {
-font-family: var(--font-base);
-background: var(--bg-primary);
-color: var(--text-primary);
-line-height: 1.7;
-overflow-x: hidden;
--webkit-font-smoothing: antialiased;
-}
-
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
-::-webkit-scrollbar-thumb { background: var(--accent-gold-dark); border-radius: 3px; }
-
-.container { max-width: var(--max-width); margin: 0 auto; padding: 0 20px; }
-
-section {
-padding: 72px 0;
-opacity: 0;
-transform: translateY(30px);
-transition: opacity 0.7s ease, transform 0.7s ease;
-}
-section.visible { opacity: 1; transform: translateY(0); }
-
-.section-title {
-font-size: clamp(1.5rem, 4vw, 2rem);
-font-weight: 700;
-margin-bottom: 8px;
-background: var(--gradient-gold);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-}
-
-.section-subtitle {
-color: var(--text-secondary);
-font-size: 0.95rem;
-margin-bottom: 36px;
-font-weight: 300;
-}
-
-.hero {
-position: relative;
-min-height: 100vh;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-text-align: center;
-background: var(--gradient-hero);
-padding: 40px 20px;
-overflow: hidden;
-opacity: 1;
-transform: none;
-}
-
-.hero::before {
-content: '';
-position: absolute;
-top: -50%; left: -50%;
-width: 200%; height: 200%;
-background: radial-gradient(ellipse at 30% 20%, rgba(226,180,79,0.06) 0%, transparent 50%),
-radial-gradient(ellipse at 70% 80%, rgba(74,144,217,0.04) 0%, transparent 50%);
-animation: heroGlow 12s ease-in-out infinite alternate;
-pointer-events: none;
-}
-
-@keyframes heroGlow {
-0% { transform: translate(0,0) scale(1); }
-100% { transform: translate(-3%,2%) scale(1.05); }
-}
-
-.hero-icon {
-font-size: 4rem;
-margin-bottom: 16px;
-animation: float 4s ease-in-out infinite;
-}
-
-@keyframes float {
-0%,100% { transform: translateY(0); }
-50% { transform: translateY(-12px); }
-}
-
-.hero h1 {
-font-size: clamp(2rem, 6vw, 3.2rem);
-font-weight: 900;
-background: var(--gradient-gold);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-letter-spacing: -0.02em;
-margin-bottom: 12px;
-}
-
-.hero-subtitle {
-font-size: clamp(0.9rem, 2.5vw, 1.15rem);
-color: var(--text-secondary);
-font-weight: 300;
-max-width: 500px;
-margin: 0 auto 32px;
-line-height: 1.8;
-}
-
-.hero-badge {
-display: inline-flex;
-align-items: center;
-gap: 8px;
-background: rgba(226,180,79,0.1);
-border: 1px solid var(--border-accent);
-padding: 8px 20px;
-border-radius: 50px;
-font-size: 0.85rem;
-color: var(--accent-gold-light);
-margin-bottom: 40px;
-}
-
-.hero-badge .dot {
-width: 6px; height: 6px;
-background: #4ade80;
-border-radius: 50%;
-animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-0%,100% { opacity: 1; transform: scale(1); }
-50% { opacity: 0.5; transform: scale(1.4); }
-}
-
-.hero-cta {
-display: inline-flex;
-align-items: center;
-gap: 8px;
-background: var(--gradient-gold);
-color: #1a1a2e;
-padding: 14px 32px;
-border-radius: 50px;
-font-weight: 700;
-font-size: 1rem;
-text-decoration: none;
-transition: var(--transition-fast);
-box-shadow: var(--shadow-gold);
-cursor: pointer;
-border: none;
-}
-
-.hero-cta:hover {
-transform: translateY(-2px);
-box-shadow: 0 8px 32px rgba(226,180,79,0.3);
-}
-
-.scroll-indicator {
-position: absolute;
-bottom: 32px;
-left: 50%;
-transform: translateX(-50%);
-width: 24px; height: 40px;
-border: 2px solid rgba(226,180,79,0.3);
-border-radius: 12px;
-display: flex;
-justify-content: center;
-}
-
-.scroll-indicator::after {
-content: '';
-width: 3px; height: 8px;
-background: var(--accent-gold);
-border-radius: 2px;
-margin-top: 6px;
-animation: scrollBounce 2s ease-in-out infinite;
-}
-
-@keyframes scrollBounce {
-0%,100% { transform: translateY(0); opacity: 1; }
-50% { transform: translateY(12px); opacity: 0.3; }
-}
-
-.card {
-background: var(--gradient-card);
-border: 1px solid var(--border-subtle);
-border-radius: var(--radius-lg);
-padding: 28px;
-transition: var(--transition-med);
-box-shadow: var(--shadow-card);
-}
-
-.card:hover {
-border-color: var(--border-accent);
-box-shadow: var(--shadow-card-hover);
-transform: translateY(-4px);
-}
-
-.filter-grid {
-display: grid;
-grid-template-columns: 1fr;
-gap: 20px;
-}
-
-@media (min-width: 640px) {
-.filter-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.filter-group label {
-display: block;
-font-size: 0.85rem;
-font-weight: 500;
-color: var(--text-secondary);
-margin-bottom: 8px;
-}
-
-.filter-group select,
-.filter-group input[type="number"] {
-width: 100%;
-padding: 12px 16px;
-background: var(--bg-primary);
-border: 1px solid var(--border-subtle);
-border-radius: var(--radius-sm);
-color: var(--text-primary);
-font-family: var(--font-base);
-font-size: 0.95rem;
-outline: none;
-transition: var(--transition-fast);
-appearance: none;
--webkit-appearance: none;
-}
-
-.filter-group select {
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a0a0b8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-background-repeat: no-repeat;
-background-position: right 14px center;
-padding-right: 40px;
-}
-
-.filter-group select:focus,
-.filter-group input:focus {
-border-color: var(--accent-gold);
-box-shadow: 0 0 0 3px rgba(226,180,79,0.12);
-}
-
-.toggle-group {
-display: flex;
-gap: 0;
-background: var(--bg-primary);
-border-radius: var(--radius-sm);
-border: 1px solid var(--border-subtle);
-overflow: hidden;
-}
-
-.toggle-btn {
-flex: 1;
-padding: 12px;
-text-align: center;
-background: transparent;
-border: none;
-color: var(--text-secondary);
-font-family: var(--font-base);
-font-size: 0.95rem;
-cursor: pointer;
-transition: var(--transition-fast);
-font-weight: 500;
-}
-
-.toggle-btn.active {
-background: var(--accent-gold);
-color: var(--bg-primary);
-font-weight: 700;
-}
-
-.slider-wrap {
-position: relative;
-}
-
-.slider-value {
-text-align: right;
-font-size: 1.1rem;
-font-weight: 700;
-color: var(--accent-gold);
-margin-bottom: 4px;
-}
-
-input[type="range"] {
-width: 100%;
-height: 6px;
--webkit-appearance: none;
-appearance: none;
-background: linear-gradient(to right, var(--accent-gold) 0%, var(--accent-gold) var(--pct, 50%), #2a2a40 var(--pct, 50%), #2a2a40 100%);
-border-radius: 3px;
-outline: none;
-cursor: pointer;
-}
-
-input[type="range"]::-webkit-slider-thumb {
--webkit-appearance: none;
-width: 22px; height: 22px;
-background: var(--accent-gold);
-border-radius: 50%;
-box-shadow: 0 2px 8px rgba(226,180,79,0.4);
-cursor: pointer;
-transition: var(--transition-fast);
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-transform: scale(1.15);
-}
-
-.area-chips {
-display: flex;
-gap: 8px;
-flex-wrap: wrap;
-}
-
-.area-chip {
-padding: 8px 18px;
-border-radius: 50px;
-font-size: 0.85rem;
-font-weight: 500;
-cursor: pointer;
-border: 1px solid var(--border-subtle);
-background: var(--bg-primary);
-color: var(--text-secondary);
-transition: var(--transition-fast);
-}
-
-.area-chip.active,
-.area-chip:hover {
-background: rgba(226,180,79,0.12);
-border-color: var(--accent-gold);
-color: var(--accent-gold);
-}
-
-.calc-grid {
-display: grid;
-grid-template-columns: 1fr;
-gap: 24px;
-}
-
-@media (min-width: 640px) {
-.calc-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.calc-input-group { margin-bottom: 20px; }
-
-.calc-input-group label {
-display: block;
-font-size: 0.85rem;
-color: var(--text-secondary);
-margin-bottom: 6px;
-font-weight: 500;
-}
-
-.calc-input-group input {
-width: 100%;
-padding: 14px 16px;
-background: var(--bg-primary);
-border: 1px solid var(--border-subtle);
-border-radius: var(--radius-sm);
-color: var(--text-primary);
-font-family: var(--font-base);
-font-size: 1rem;
-outline: none;
-transition: var(--transition-fast);
-}
-
-.calc-input-group input:focus {
-border-color: var(--accent-gold);
-box-shadow: 0 0 0 3px rgba(226,180,79,0.12);
-}
-
-.calc-result {
-background: linear-gradient(135deg, rgba(226,180,79,0.08) 0%, rgba(74,144,217,0.05) 100%);
-border: 1px solid var(--border-accent);
-border-radius: var(--radius-md);
-padding: 24px;
-}
-
-.result-row {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 10px 0;
-border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-
-.result-row:last-child { border-bottom: none; }
-
-.result-label {
-font-size: 0.88rem;
-color: var(--text-secondary);
-}
-
-.result-value {
-font-size: 1rem;
-font-weight: 700;
-color: var(--text-primary);
-}
-
-.result-value.highlight {
-color: var(--accent-gold);
-font-size: 1.15rem;
-}
-
-.result-value.savings {
-color: #4ade80;
-}
-
-.income-bracket-indicator {
-margin-top: 16px;
-padding: 14px 18px;
-background: rgba(74,144,217,0.08);
-border: 1px solid rgba(74,144,217,0.2);
-border-radius: var(--radius-sm);
-font-size: 0.88rem;
-color: var(--accent-blue-light);
-line-height: 1.6;
-}
-
-.rec-grid {
-display: grid;
-grid-template-columns: 1fr;
-gap: 20px;
-}
-
-@media (min-width: 640px) {
-.rec-grid { grid-template-columns: 1fr 1fr; }
-}
-
-.rec-card {
-position: relative;
-overflow: hidden;
-}
-
-.rec-header {
-display: flex;
-align-items: center;
-gap: 12px;
-margin-bottom: 16px;
-}
-
-.rec-icon {
-width: 44px; height: 44px;
-background: rgba(226,180,79,0.1);
-border-radius: 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 1.3rem;
-}
-
-.rec-title {
-font-weight: 700;
-font-size: 1.05rem;
-}
-
-.rec-subtitle {
-font-size: 0.82rem;
-color: var(--text-muted);
-}
-
-.rec-areas {
-display: flex;
-flex-wrap: wrap;
-gap: 8px;
-}
-
-.rec-area-tag {
-padding: 6px 14px;
-background: rgba(226,180,79,0.08);
-border: 1px solid var(--border-accent);
-border-radius: 50px;
-font-size: 0.82rem;
-color: var(--accent-gold-light);
-font-weight: 500;
-}
-
-.rec-area-tag .time {
-color: var(--text-muted);
-font-weight: 300;
-margin-left: 4px;
-}
-
-.listings-grid {
-display: grid;
-grid-template-columns: 1fr;
-gap: 20px;
-}
-
-@media (min-width: 640px) {
-.listings-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
-}
-
-.listing-card {
-position: relative;
-overflow: hidden;
-}
-
-.listing-badge {
-position: absolute;
-top: 16px; right: 16px;
-padding: 4px 12px;
-border-radius: 50px;
-font-size: 0.72rem;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-}
-
-.listing-badge.jeonse {
-background: rgba(74,144,217,0.15);
-color: var(--accent-blue-light);
-border: 1px solid rgba(74,144,217,0.3);
-}
-
-.listing-badge.wolse {
-background: rgba(226,180,79,0.15);
-color: var(--accent-gold-light);
-border: 1px solid rgba(226,180,79,0.3);
-}
-
-.listing-name {
-font-size: 1.1rem;
-font-weight: 700;
-margin-bottom: 6px;
-padding-right: 60px;
-}
-
-.listing-location {
-font-size: 0.85rem;
-color: var(--text-muted);
-margin-bottom: 14px;
-}
-
-.listing-specs {
-display: flex;
-gap: 16px;
-margin-bottom: 14px;
-flex-wrap: wrap;
-}
-
-.listing-spec {
-font-size: 0.82rem;
-color: var(--text-secondary);
-display: flex;
-align-items: center;
-gap: 5px;
-}
-
-.listing-spec .spec-icon {
-font-size: 0.9rem;
-}
-
-.listing-price {
-font-size: 1.2rem;
-font-weight: 900;
-background: var(--gradient-gold);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-margin-bottom: 6px;
-}
-
-.listing-price-sub {
-font-size: 0.82rem;
-color: var(--text-muted);
-}
-
-.listing-tags {
-display: flex;
-gap: 6px;
-margin-top: 14px;
-flex-wrap: wrap;
-}
-
-.listing-tag {
-padding: 3px 10px;
-background: rgba(255,255,255,0.04);
-border-radius: 4px;
-font-size: 0.75rem;
-color: var(--text-muted);
-}
-
-.timeline {
-position: relative;
-padding-left: 32px;
-}
-
-.timeline::before {
-content: '';
-position: absolute;
-left: 8px;
-top: 0;
-bottom: 0;
-width: 2px;
-background: linear-gradient(to bottom, var(--accent-gold) 0%, var(--accent-blue) 100%);
-border-radius: 1px;
-}
-
-.timeline-item {
-position: relative;
-margin-bottom: 32px;
-padding: 20px 24px;
-background: var(--gradient-card);
-border: 1px solid var(--border-subtle);
-border-radius: var(--radius-md);
-transition: var(--transition-med);
-}
-
-.timeline-item:hover {
-border-color: var(--border-accent);
-transform: translateX(4px);
-}
-
-.timeline-item::before {
-content: '';
-position: absolute;
-left: -28px;
-top: 26px;
-width: 12px; height: 12px;
-background: var(--accent-gold);
-border-radius: 50%;
-border: 3px solid var(--bg-primary);
-box-shadow: 0 0 12px rgba(226,180,79,0.4);
-}
-
-.timeline-date {
-font-size: 0.78rem;
-color: var(--accent-gold);
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.08em;
-margin-bottom: 4px;
-}
-
-.timeline-title {
-font-size: 1rem;
-font-weight: 700;
-margin-bottom: 4px;
-}
-
-.timeline-desc {
-font-size: 0.85rem;
-color: var(--text-secondary);
-line-height: 1.6;
-}
-
-.dday-banner {
-text-align: center;
-padding: 32px;
-background: linear-gradient(135deg, rgba(226,180,79,0.1) 0%, rgba(74,144,217,0.06) 100%);
-border: 1px solid var(--border-accent);
-border-radius: var(--radius-lg);
-margin-bottom: 40px;
-}
-
-.dday-label {
-font-size: 0.85rem;
-color: var(--text-secondary);
-margin-bottom: 4px;
-}
-
-.dday-date {
-font-size: 1.1rem;
-font-weight: 700;
-margin-bottom: 12px;
-}
-
-.dday-count {
-font-size: 2.4rem;
-font-weight: 900;
-background: var(--gradient-gold);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-}
-
-footer {
-padding: 48px 0 32px;
-text-align: center;
-border-top: 1px solid var(--border-subtle);
-}
-
-.footer-links {
-display: flex;
-gap: 24px;
-justify-content: center;
-margin-bottom: 20px;
-flex-wrap: wrap;
-}
-
-.footer-link {
-color: var(--text-secondary);
-text-decoration: none;
-font-size: 0.85rem;
-transition: var(--transition-fast);
-}
-
-.footer-link:hover { color: var(--accent-gold); }
-
-.footer-copy {
-font-size: 0.78rem;
-color: var(--text-muted);
-}
-
-.top-nav {
-position: fixed;
-top: 0; left: 0; right: 0;
-z-index: 100;
-background: rgba(13,13,26,0.85);
-backdrop-filter: blur(20px);
--webkit-backdrop-filter: blur(20px);
-border-bottom: 1px solid var(--border-subtle);
-transform: translateY(-100%);
-transition: transform 0.35s ease;
-}
-
-.top-nav.visible { transform: translateY(0); }
-
-.nav-inner {
-max-width: var(--max-width);
-margin: 0 auto;
-padding: 12px 20px;
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-
-.nav-brand {
-font-weight: 700;
-font-size: 1rem;
-color: var(--accent-gold);
-}
-
-.nav-links {
-display: flex;
-gap: 20px;
-}
-
-.nav-link {
-font-size: 0.82rem;
-color: var(--text-secondary);
-text-decoration: none;
-transition: var(--transition-fast);
-}
-
-.nav-link:hover { color: var(--accent-gold); }
-
-@media (max-width: 500px) {
-.nav-links { display: none; }
-}
-
-.stats-row {
-display: grid;
-grid-template-columns: repeat(3,1fr);
-gap: 16px;
-margin-bottom: 40px;
-}
-
-.stat-item {
-text-align: center;
-padding: 20px 8px;
-background: var(--gradient-card);
-border: 1px solid var(--border-subtle);
-border-radius: var(--radius-md);
-}
-
-.stat-number {
-font-size: clamp(1.3rem, 4vw, 1.8rem);
-font-weight: 900;
-color: var(--accent-gold);
-}
-
-.stat-label {
-font-size: 0.78rem;
-color: var(--text-muted);
-margin-top: 4px;
-}
+:root{
+  --bg:#f8f9fa;--card:#fff;--border:#e2e8f0;--txt:#1a202c;--sub:#64748b;
+  --accent:#3b82f6;--accent2:#10b981;--warn:#f59e0b;--danger:#ef4444;
+  --gtx:#7c3aed;--radius:12px;--shadow:0 2px 8px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;min-height:100vh;}
+#hdr{background:#fff;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+#hdr h1{font-size:1.1rem;font-weight:700;}
+.gtx-wrap{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--gtx);}
+.toggle-track{width:40px;height:22px;background:#ddd;border-radius:11px;position:relative;cursor:pointer;transition:.3s;}
+.toggle-track.on{background:var(--gtx);}
+.toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.3s;}
+.toggle-track.on .toggle-thumb{left:20px;}
+#tabs{display:grid;grid-template-columns:repeat(7,1fr);background:#fff;border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:99;}
+.tab{padding:8px 2px;text-align:center;font-size:.63rem;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;}
+.tab.on{color:var(--accent);border-color:var(--accent);font-weight:600;}
+.tab .ti{font-size:1rem;display:block;}
+.pg{display:none;padding:12px 12px 80px;}
+.pg.on{display:block;}
+.sb{display:flex;gap:6px;margin-bottom:10px;}
+.sb input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;}
+.sb input:focus{border-color:var(--accent);}
+.sb button{padding:9px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;}
+.qf{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.qf button{padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:20px;font-size:.75rem;cursor:pointer;}
+.frow{display:flex;gap:6px;margin-bottom:10px;align-items:center;}
+.frow select{flex:1;padding:7px;border:1px solid var(--border);border-radius:8px;font-size:.78rem;background:#fff;}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.stat-box{background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border);}
+.stat-box .sv{font-size:1.1rem;font-weight:700;color:var(--accent);}
+.stat-box .sk{font-size:.7rem;color:var(--sub);}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;padding:14px;cursor:pointer;border:1px solid var(--border);transition:.2s;}
+.card:hover{border-color:var(--accent);}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.card-name{font-size:.95rem;font-weight:700;}
+.card-price{font-size:1rem;font-weight:700;color:var(--accent);}
+.tag{padding:2px 8px;border-radius:20px;font-size:.7rem;background:#eff6ff;color:var(--accent);display:inline-block;}
+.tag.gtx{background:#f5f3ff;color:var(--gtx);}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.fav-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;padding:2px;}
+.bbar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:3px;}
+.bbar-fill{height:100%;border-radius:4px;transition:.5s;}
+#mo{position:fixed;inset:0;z-index:200;display:none;}
+#mo.open{display:flex;flex-direction:column;justify-content:flex-end;}
+#mo-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#mo-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;max-height:85vh;overflow-y:auto;position:relative;z-index:1;}
+.mo-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.85rem;}
+.mo-row .mk{color:var(--sub);}
+.mo-row .mv{font-weight:600;}
+.mo-sect{font-size:.8rem;font-weight:700;color:var(--sub);margin:12px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px;}
+.mo-memo{width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;resize:vertical;min-height:70px;font-family:inherit;}
+.mo-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;margin-top:8px;}
+.comm-item{text-align:center;}
+.comm-min{font-size:1.4rem;font-weight:700;color:var(--accent);}
+.comm-min.gtx{color:var(--gtx);}
+.comm-orig{font-size:.75rem;color:var(--sub);text-decoration:line-through;}
+.comm-label{font-size:.7rem;color:var(--sub);}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:8px 18px;border-radius:20px;font-size:.85rem;opacity:0;transition:.3s;pointer-events:none;z-index:300;white-space:nowrap;}
+#toast.show{opacity:1;}
+.sec-title{font-size:.85rem;font-weight:700;color:var(--sub);margin-bottom:8px;}
+.f-row{margin-bottom:10px;}
+.f-row label{font-size:.78rem;color:var(--sub);display:block;margin-bottom:4px;}
+.f-row input,.f-row select{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;}
+.f-row input:focus{outline:none;border-color:var(--accent);}
+.f-btn{width:100%;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;margin-bottom:8px;}
+.f-btn.pri{background:var(--accent);color:#fff;}
+.f-btn.sec{background:#f1f5f9;color:var(--txt);}
+.f-btn.danger{background:var(--danger);color:#fff;}
+.loan-result{background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius);padding:14px;margin-top:10px;}
+.loan-result .lr-main{font-size:1.3rem;font-weight:700;color:var(--accent);}
+.loan-result .lr-sub{font-size:.8rem;color:var(--sub);margin-top:4px;}
+.loan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.loan-box{background:#fff;border-radius:8px;padding:10px;border:1px solid var(--border);}
+.loan-box .lv{font-size:1rem;font-weight:700;}
+.loan-box .lk{font-size:.7rem;color:var(--sub);}
+.sched-item{background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sched-dday{min-width:50px;text-align:center;font-size:.75rem;font-weight:700;color:var(--accent);}
+.sched-info{flex:1;}
+.sched-title{font-size:.9rem;font-weight:600;}
+.sched-date{font-size:.75rem;color:var(--sub);}
+.sched-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;}
+.favs-empty{text-align:center;padding:40px;color:var(--sub);}
+.fav-compare{background:#fff;border-radius:var(--radius);overflow-x:auto;margin-bottom:12px;border:1px solid var(--border);}
+.fav-compare table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.fav-compare th{background:#f8fafc;padding:8px;text-align:left;color:var(--sub);font-weight:600;}
+.fav-compare td{padding:8px;border-top:1px solid var(--border);}
+.rts-code-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.rts-code-btns button{padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:20px;font-size:.75rem;cursor:pointer;}
+.rts-code-btns button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.rts-item{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);}
+.rts-item .ri-name{font-size:.9rem;font-weight:600;}
+.rts-item .ri-price{font-size:1rem;font-weight:700;color:var(--accent);}
+.rts-item .ri-meta{font-size:.73rem;color:var(--sub);margin-top:2px;}
+.rts-state{text-align:center;padding:30px;color:var(--sub);}
+#map-wrap{height:350px;border-radius:var(--radius);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.9rem;text-align:center;}
+#map{width:100%;height:100%;}
+#fb-status-box{margin-top:8px;padding:8px 12px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;display:none;}
+#fb-status-text{font-size:.8rem;color:var(--accent2);}
+.gtx-badge{background:#f5f3ff;color:var(--gtx);border-radius:8px;padding:8px 12px;font-size:.8rem;margin-bottom:10px;border:1px solid #ddd6fe;}
+.rts-filters{display:flex;gap:6px;margin-bottom:10px;}
+.rts-filters input{flex:1;padding:7px;border:1px solid var(--border);border-radius:8px;font-size:.8rem;}
 </style>
 </head>
 <body>
 
-<nav class="top-nav" id="topNav">
-<div class="nav-inner">
-<span class="nav-brand">&#127968; 신혼집 부동산</span>
-<div class="nav-links">
-<a href="#filter" class="nav-link">필터</a>
-<a href="#calculator" class="nav-link">계산기</a>
-<a href="#recommend" class="nav-link">추천</a>
-<a href="#recommended-listings" class="nav-link">추천매물</a>
-<a href="#listings" class="nav-link">매물</a>
-<a href="#timeline" class="nav-link">타임라인</a>
-</div>
-</div>
-</nav>
-
-<section class="hero visible">
-<div class="hero-icon">&#127968;</div>
-<h1>신혼집 부동산 앱</h1>
-<p class="hero-subtitle">서울시 신혼부부 임차보증금 이자지원 활용<br>전세 탐색 &amp; 대출 계산</p>
-<div class="hero-badge">
-<span class="dot"></span>
-서울시 25개 구 실시간 탐색
-</div>
-<a href="#filter" class="hero-cta">&#128269; 탐색 시작하기</a>
-<div class="scroll-indicator"></div>
-</section>
-
-<section id="stats">
-<div class="container">
-<div class="stats-row">
-<div class="stat-item">
-<div class="stat-number">25</div>
-<div class="stat-label">서울시 자치구</div>
-</div>
-<div class="stat-item">
-<div class="stat-number">3.0%</div>
-<div class="stat-label">최대 이자지원</div>
-</div>
-<div class="stat-item">
-<div class="stat-number">7억</div>
-<div class="stat-label">보증금 상한</div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="filter">
-<div class="container">
-<h2 class="section-title">&#128270; 매물 탐색 필터</h2>
-<p class="section-subtitle">원하는 조건을 설정하여 최적의 신혼집을 찾아보세요</p>
-
-<div class="card">
-<div class="filter-grid">
-<div class="filter-group">
-<label for="districtSelect">서울시 자치구</label>
-<select id="districtSelect">
-<option value="">전체 (25개 구)</option>
-<option value="강남구">강남구</option>
-<option value="강동구">강동구</option>
-<option value="강북구">강북구</option>
-<option value="강서구">강서구</option>
-<option value="관악구">관악구</option>
-<option value="광진구">광진구</option>
-<option value="구로구">구로구</option>
-<option value="금천구">금천구</option>
-<option value="노원구">노원구</option>
-<option value="도봉구">도봉구</option>
-<option value="동대문구">동대문구</option>
-<option value="동작구">동작구</option>
-<option value="마포구">마포구</option>
-<option value="서대문구">서대문구</option>
-<option value="서초구">서초구</option>
-<option value="성동구">성동구</option>
-<option value="성북구">성북구</option>
-<option value="송파구">송파구</option>
-<option value="양천구">양천구</option>
-<option value="영등포구">영등포구</option>
-<option value="용산구">용산구</option>
-<option value="은평구">은평구</option>
-<option value="종로구">종로구</option>
-<option value="중구">중구</option>
-<option value="중랑구">중랑구</option>
-</select>
+<div id="hdr">
+  <h1>🏠 신혼집 탐색기</h1>
+  <div class="gtx-wrap">
+    <span style="font-size:.7rem">GTX-A</span>
+    <div class="toggle-track" id="gtx-track" onclick="toggleGTX()">
+      <div class="toggle-thumb" id="gtx-thumb"></div>
+    </div>
+    <span id="gtx-lbl">OFF</span>
+  </div>
 </div>
 
-<div class="filter-group">
-<label>거래유형</label>
-<div class="toggle-group">
-<button class="toggle-btn active" data-type="전세" onclick="setTradeType(this)">전세</button>
-<button class="toggle-btn" data-type="월세" onclick="setTradeType(this)">월세</button>
-</div>
-</div>
-
-<div class="filter-group" style="grid-column: 1 / -1;">
-<label>보증금 상한</label>
-<div class="slider-wrap">
-<div class="slider-value" id="depositDisplay">3억 5,000만원</div>
-<input type="range" id="depositSlider" min="0" max="70000" step="1000" value="35000"
-oninput="updateDeposit(this)">
-</div>
+<div id="tabs">
+  <div class="tab on" onclick="showPg('pg-search')"><span class="ti">🔍</span>탐색</div>
+  <div class="tab" onclick="showPg('pg-favs')"><span class="ti">⭐</span>즐겨찾기<span id="fav-cnt-tab"></span></div>
+  <div class="tab" onclick="showPg('pg-rts')"><span class="ti">📊</span>실거래</div>
+  <div class="tab" onclick="showPg('pg-map')"><span class="ti">🗺️</span>지도</div>
+  <div class="tab" onclick="showPg('pg-sched')"><span class="ti">📅</span>일정</div>
+  <div class="tab" onclick="showPg('pg-settings')"><span class="ti">⚙️</span>설정</div>
+  <div class="tab" onclick="showPg('pg-loan')"><span class="ti">💰</span>대출</div>
 </div>
 
-<div class="filter-group" style="grid-column: 1 / -1;">
-<label>전용면적</label>
-<div class="area-chips">
-<span class="area-chip active" onclick="setArea(this, 59)">59&#13217; (24평)</span>
-<span class="area-chip" onclick="setArea(this, 84)">84&#13217; (34평)</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="calculator">
-<div class="container">
-<h2 class="section-title">&#128202; 대출 계산기</h2>
-<p class="section-subtitle">서울시 신혼부부 임차보증금 이자지원 혜택을 계산해보세요</p>
-
-<div class="calc-grid">
-<div class="card">
-<h3 style="font-size:1rem; margin-bottom:20px; color:var(--text-primary);">&#128221; 정보 입력</h3>
-<div class="calc-input-group">
-<label for="loanAmount">대출금액 (만원)</label>
-<input type="number" id="loanAmount" value="30000" placeholder="30000" oninput="calculate()">
-</div>
-<div class="calc-input-group">
-<label for="annualIncome">부부합산 연소득 (만원)</label>
-<input type="number" id="annualIncome" value="7000" placeholder="7000" oninput="calculate()">
-</div>
-<div class="income-bracket-indicator" id="bracketInfo">
-&#128161; 소득구간: 6천~8천만원<br>
-서울시 이자지원 1.5% &middot; 본인부담 3.0%
-</div>
-</div>
-
-<div class="card">
-<h3 style="font-size:1rem; margin-bottom:20px; color:var(--text-primary);">&#128176; 계산 결과</h3>
-<div class="calc-result">
-<div class="result-row">
-<span class="result-label">시중 금리 (기준)</span>
-<span class="result-value">4.5%</span>
-</div>
-<div class="result-row">
-<span class="result-label">서울시 이자지원</span>
-<span class="result-value highlight" id="supportRate">1.5%</span>
-</div>
-<div class="result-row">
-<span class="result-label">본인부담 금리</span>
-<span class="result-value" id="selfRate">3.0%</span>
-</div>
-<div class="result-row" style="border-top:1px solid rgba(226,180,79,0.15); padding-top:16px; margin-top:8px;">
-<span class="result-label">시중금리 월 이자</span>
-<span class="result-value" id="marketMonthly">112.5만원</span>
-</div>
-<div class="result-row">
-<span class="result-label">지원 후 월 이자</span>
-<span class="result-value highlight" id="supportMonthly">75.0만원</span>
-</div>
-<div class="result-row">
-<span class="result-label">월 절감액</span>
-<span class="result-value savings" id="monthlySavings">&#9660; 37.5만원</span>
-</div>
-<div class="result-row">
-<span class="result-label">연간 절감액</span>
-<span class="result-value savings" id="annualSavings">&#9660; 450.0만원</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="recommend">
-<div class="container">
-<h2 class="section-title">&#128205; 추천 거주 지역</h2>
-<p class="section-subtitle">직장 위치 기반 출퇴근 최적 지역 추천</p>
-
-<div class="rec-grid">
-<div class="card rec-card">
-<div class="rec-header">
-<div class="rec-icon">&#128644;</div>
-<div>
-<div class="rec-title">직장 A &mdash; 서울역</div>
-<div class="rec-subtitle">1호선 / 4호선 / 경의중앙선</div>
-</div>
-</div>
-<div class="rec-areas">
-<span class="rec-area-tag">용산구 <span class="time">10분</span></span>
-<span class="rec-area-tag">마포구 <span class="time">15분</span></span>
-<span class="rec-area-tag">중구 <span class="time">5분</span></span>
-</div>
+<!-- 매물탐색 -->
+<div class="pg on" id="pg-search">
+  <div class="sb">
+    <input id="fkw" type="text" placeholder="아파트명, 지역 검색..." oninput="applyF()">
+    <button onclick="applyF()">검색</button>
+  </div>
+  <div class="qf">
+    <button onclick="qf('전세')">전세</button>
+    <button onclick="qf('월세')">월세</button>
+    <button onclick="qf('GTX')">GTX-A</button>
+    <button onclick="qf('역세권')">역세권</button>
+    <button onclick="qf('신축')">신축</button>
+    <button onclick="qf('')">전체</button>
+  </div>
+  <div class="frow">
+    <select id="fsort" onchange="applyF()">
+      <option value="def">기본정렬</option>
+      <option value="dep_asc">보증금낮은순</option>
+      <option value="dep_desc">보증금높은순</option>
+      <option value="area">면적큰순</option>
+      <option value="year">신축순</option>
+      <option value="com">통근짧은순</option>
+    </select>
+    <select id="ftype" onchange="applyF()">
+      <option value="">전월세전체</option>
+      <option value="전세">전세</option>
+      <option value="월세">월세</option>
+    </select>
+    <select id="fmax" onchange="applyF()">
+      <option value="0">예산전체</option>
+      <option value="3">3억↓</option>
+      <option value="4">4억↓</option>
+      <option value="5">5억↓</option>
+      <option value="6">6억↓</option>
+    </select>
+  </div>
+  <div class="gtx-badge" id="gtx-badge" style="display:none">⚡ GTX-A 2027년 개통 기준 통근 시간으로 보정 중</div>
+  <div class="stat-row" id="stat-row">
+    <div class="stat-box"><div class="sv" id="s-cnt">0</div><div class="sk">매물수</div></div>
+    <div class="stat-box"><div class="sv" id="s-avg">-</div><div class="sk">평균보증금</div></div>
+    <div class="stat-box"><div class="sv" id="s-comm">-</div><div class="sk">평균통근</div></div>
+  </div>
+  <div id="card-list"></div>
 </div>
 
-<div class="card rec-card">
-<div class="rec-header">
-<div class="rec-icon">&#128647;</div>
-<div>
-<div class="rec-title">직장 B &mdash; 문정동</div>
-<div class="rec-subtitle">8호선 / 3호선 환승</div>
-</div>
-</div>
-<div class="rec-areas">
-<span class="rec-area-tag">송파구 <span class="time">10분</span></span>
-<span class="rec-area-tag">강동구 <span class="time">20분</span></span>
-<span class="rec-area-tag">성동구 <span class="time">30분</span></span>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<!-- NEW: 추천 매물 section - dynamically rendered from recommendedEstates -->
-<section id="recommended-listings">
-<div class="container">
-<h2 class="section-title">&#11088; 추천 매물</h2>
-<p class="section-subtitle">출퇴근 동선과 예산을 고려한 엄선 매물</p>
-<div class="listings-grid" id="recommendedGrid"></div>
-</div>
-</section>
-
-<section id="listings">
-<div class="container">
-<h2 class="section-title">&#127970; 주요 매물</h2>
-<p class="section-subtitle">관심 단지 시세 정보 (샘플 데이터)</p>
-
-<div class="listings-grid">
-<div class="card listing-card">
-<span class="listing-badge jeonse">전세</span>
-<div class="listing-name">문정래미안</div>
-<div class="listing-location">송파구 문정동</div>
-<div class="listing-specs">
-<span class="listing-spec"><span class="spec-icon">&#128207;</span> 59&#13217;</span>
-<span class="listing-spec"><span class="spec-icon">&#128197;</span> 2004년</span>
-<span class="listing-spec"><span class="spec-icon">&#127970;</span> 2,678세대</span>
-</div>
-<div class="listing-price">5억 ~ 7억</div>
-<div class="listing-price-sub">전세가율 약 62%</div>
-<div class="listing-tags">
-<span class="listing-tag">8호선 문정역</span>
-<span class="listing-tag">래미안</span>
-<span class="listing-tag">대단지</span>
-</div>
+<!-- 즐겨찾기 -->
+<div class="pg" id="pg-favs">
+  <div id="favs-wrap"></div>
 </div>
 
-<div class="card listing-card">
-<span class="listing-badge jeonse">전세</span>
-<div class="listing-name">구파발 9단지 래미안</div>
-<div class="listing-location">은평구 진관동</div>
-<div class="listing-specs">
-<span class="listing-spec"><span class="spec-icon">&#128207;</span> 59&#13217;</span>
-<span class="listing-spec"><span class="spec-icon">&#128197;</span> 2011년</span>
-<span class="listing-spec"><span class="spec-icon">&#127970;</span> 1,491세대</span>
-</div>
-<div class="listing-price">5.0억 ~ 5.4억</div>
-<div class="listing-price-sub">전세가율 약 70%</div>
-<div class="listing-tags">
-<span class="listing-tag">3호선 구파발</span>
-<span class="listing-tag">래미안</span>
-<span class="listing-tag">신혼선호</span>
-</div>
-</div>
-
-<div class="card listing-card">
-<span class="listing-badge wolse">보증부월세</span>
-<div class="listing-name">올림픽훼밀리타운</div>
-<div class="listing-location">송파구 방이동</div>
-<div class="listing-specs">
-<span class="listing-spec"><span class="spec-icon">&#128207;</span> 84&#13217;</span>
-<span class="listing-spec"><span class="spec-icon">&#128197;</span> 1988년</span>
-<span class="listing-spec"><span class="spec-icon">&#127970;</span> 4,786세대</span>
-</div>
-<div class="listing-price">보증금 4억 / 월 149만</div>
-<div class="listing-price-sub">올림픽공원 인접 대단지</div>
-<div class="listing-tags">
-<span class="listing-tag">5호선 올림픽공원</span>
-<span class="listing-tag">리모델링</span>
-<span class="listing-tag">84&#13217;</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-
-<section id="timeline">
-<div class="container">
-<h2 class="section-title">&#128197; 타임라인</h2>
-<p class="section-subtitle">결혼 준비 일정 &amp; 주요 마일스톤</p>
-
-<div class="dday-banner">
-<div class="dday-label">결혼식</div>
-<div class="dday-date">2026년 11월 14일 (토)</div>
-<div class="dday-count" id="ddayCount">D-538</div>
+<!-- 실거래가 -->
+<div class="pg" id="pg-rts">
+  <div class="sec-title">지역 선택</div>
+  <div class="rts-code-btns" id="rts-btns">
+    <button onclick="setRtsCode('11380','은평구','202604')" class="on">은평구</button>
+    <button onclick="setRtsCode('11440','마포구','202604')">마포구</button>
+    <button onclick="setRtsCode('11710','송파구','202604')">송파구</button>
+    <button onclick="setRtsCode('11170','용산구','202604')">용산구</button>
+    <button onclick="setRtsCode('11200','성동구','202604')">성동구</button>
+    <button onclick="setRtsCode('11650','서초구','202604')">서초구</button>
+    <button onclick="setRtsCode('11680','강남구','202604')">강남구</button>
+  </div>
+  <div class="rts-filters">
+    <input id="rts-lawdcd" placeholder="법정동코드(5자리)" value="11380">
+    <input id="rts-ym" placeholder="연월(202604)" value="202604">
+    <input id="rts-apt" placeholder="아파트명(선택)">
+  </div>
+  <button class="f-btn pri" id="rts-btn" onclick="fetchRTS()" style="margin-top:2px">조회하기</button>
+  <div id="rts-result"></div>
 </div>
 
-<div class="timeline">
-<div class="timeline-item">
-<div class="timeline-date">2026년 5월</div>
-<div class="timeline-title">신혼집 탐색 시작</div>
-<div class="timeline-desc">서울시 이자지원 사업 조건 확인, 관심 단지 리스트업, 앱 MVP 개발 착수</div>
+<!-- 지도 -->
+<div class="pg" id="pg-map">
+  <div id="map-wrap">
+    <div id="map-placeholder">📍 설정 탭에서<br>카카오맵 API 키를<br>입력하면 지도가 표시됩니다</div>
+    <div id="map" style="display:none;width:100%;height:100%"></div>
+  </div>
+  <div style="margin-top:10px;font-size:.8rem;color:var(--sub)">카카오 개발자 콘솔에서 JavaScript 앱 키를 발급 받아 설정 탭에 입력하세요.</div>
 </div>
-<div class="timeline-item">
-<div class="timeline-date">2026년 6~7월</div>
-<div class="timeline-title">실거주지 탐색 &amp; 임장</div>
-<div class="timeline-desc">후보 단지 방문, 전세 시세 확인, 중개사 상담, 직장 출퇴근 동선 체크</div>
-</div>
-<div class="timeline-item">
-<div class="timeline-date">2026년 8~9월</div>
-<div class="timeline-title">전세 계약 &amp; 대출 신청</div>
-<div class="timeline-desc">전세 계약 체결, 서울시 이자지원 사업 신청, 전세자금 대출 실행</div>
-</div>
-<div class="timeline-item">
-<div class="timeline-date">2026년 10월</div>
-<div class="timeline-title">이사 &amp; 입주 준비</div>
-<div class="timeline-desc">전입신고, 확정일자, 가전/가구 입고, 인테리어 마무리</div>
-</div>
-<div class="timeline-item">
-<div class="timeline-date">2026년 11월 14일</div>
-<div class="timeline-title">&#128144; 결혼식</div>
-<div class="timeline-desc">행복한 결혼식 후 신혼집에서 새로운 시작!</div>
-</div>
-</div>
-</div>
-</section>
 
-<footer>
-<div class="container">
-<div class="footer-links">
-<a href="https://github.com" class="footer-link" target="_blank" rel="noopener">&#128187; GitHub</a>
-<a href="#filter" class="footer-link">매물 탐색</a>
-<a href="#calculator" class="footer-link">대출 계산기</a>
-<a href="#timeline" class="footer-link">타임라인</a>
+<!-- 일정 -->
+<div class="pg" id="pg-sched">
+  <div class="sec-title">일정 추가</div>
+  <div class="f-row"><label>일정 제목</label><input id="sc-title" placeholder="예: 은평뉴타운 임장"></div>
+  <div class="f-row"><label>날짜</label><input id="sc-date" type="date"></div>
+  <div class="f-row"><label>메모</label><input id="sc-memo" placeholder="메모 입력"></div>
+  <button class="f-btn pri" onclick="addSched()">일정 추가</button>
+  <div class="sec-title" style="margin-top:16px">📅 예정 일정</div>
+  <div id="sched-list"></div>
 </div>
-<p class="footer-copy">&copy; 2026 신혼집 부동산 앱 &middot; MVP v1.0 &middot; Made with &#10084;&#65039; for newlyweds</p>
+
+<!-- 설정 -->
+<div class="pg" id="pg-settings">
+  <div class="sec-title">🔑 API 키 설정</div>
+  <div class="f-row">
+    <label>카카오맵 API 키 (JavaScript 키)</label>
+    <input id="s-kakao" type="password" placeholder="카카오 개발자 콘솔에서 발급">
+  </div>
+  <div class="f-row">
+    <label>공공데이터 API 키 (국토부 실거래가)</label>
+    <input id="s-molit" type="password" placeholder="data.go.kr 에서 발급">
+  </div>
+  <button class="f-btn pri" onclick="saveSettings()">API 키 저장</button>
+
+  <div class="sec-title" style="margin-top:20px">🔥 Firebase 실시간 동기화</div>
+  <p style="font-size:.78rem;color:var(--sub);margin-bottom:10px">Firebase Realtime DB URL과 동기화 ID를 입력하면 여러 기기에서 즐겨찾기·메모가 실시간 공유됩니다.</p>
+  <div class="f-row">
+    <label>Firebase Database URL</label>
+    <input id="s-fb-url" placeholder="https://xxx-default-rtdb.firebaseio.com">
+  </div>
+  <div class="f-row">
+    <label>동기화 ID (기기 공유 키)</label>
+    <input id="s-fb-id" placeholder="예: sinhonjip2025">
+  </div>
+  <button class="f-btn pri" onclick="initFirebase()">Firebase 연결</button>
+  <button class="f-btn sec" onclick="disconnectFirebase()">연결 해제</button>
+  <div id="fb-status-box"><span id="fb-status-text">✅ 연결됨</span></div>
+
+  <div class="sec-title" style="margin-top:20px">ℹ️ 앱 정보</div>
+  <div style="font-size:.8rem;color:var(--sub);line-height:1.8">
+    <div>최대 예산: 6억 (자체 3억 + 서울시 대출 3억)</div>
+    <div>실부담 금리: COFIX 3.5% + 1.45% − 서울지원 2.0% = <strong>2.95%</strong></div>
+    <div>GTX-A: 연신내↔서울역 2027년 개통 예정</div>
+    <div>버전: v3.0 (2026.05.25)</div>
+  </div>
 </div>
-</footer>
+
+<!-- 대출계산기 -->
+<div class="pg" id="pg-loan">
+  <div class="sec-title">💰 서울시 신혼부부 대출 계산기</div>
+  <div class="f-row"><label>주택 가격 (만원)</label><input id="l-price" type="number" value="50000" oninput="calcL()"></div>
+  <div class="f-row"><label>자체 보유 자금 (만원)</label><input id="l-self" type="number" value="30000" oninput="calcL()"></div>
+  <div class="f-row"><label>대출 기간</label>
+    <select id="l-years" onchange="calcL()">
+      <option value="10">10년</option>
+      <option value="20" selected>20년</option>
+      <option value="30">30년</option>
+    </select>
+  </div>
+  <div class="f-row"><label>상환 방식</label>
+    <select id="l-type" onchange="calcL()">
+      <option value="equal">원리금균등</option>
+      <option value="principal">원금균등</option>
+    </select>
+  </div>
+  <div id="loan-result"></div>
+</div>
+
+<!-- Modal -->
+<div id="mo">
+  <div id="mo-bg" onclick="closeMo()"></div>
+  <div id="mo-sheet"><div id="mo-content"></div></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
-/* ── Recommended Estates Data ── */
-const recommendedEstates = [
-  {
-    badge: "반전세",
-    name: "올림픽훼밀리타운",
-    area: "84㎡ (34평)",
-    type: "보증부월세",
-    price: "보증금 5.2억 / 월세 70만",
-    desc: "올림픽공원 인접, 리모델링 추진 대단지. 5호선 올림픽공원역 도보권",
-    region: "송파구 문정동",
-    commute: { seoulStation: "45분 (5호선→1호선)", munjeong: "10분 (도보)" }
-  },
-  {
-    badge: "전세",
-    name: "구파발 9단지 래미안",
-    area: "59㎡ (24평)",
-    type: "전세",
-    price: "전세 5.0억 ~ 5.4억",
-    desc: "3호선 구파발역 초역세권, 신혼부부 선호 단지. 은평뉴타운 생활 인프라",
-    region: "은평구 진관동",
-    commute: { seoulStation: "35분 (3호선)", munjeong: "55분 (3호선→8호선)" }
-  },
-  {
-    badge: "전세",
-    name: "꿈에그린 엘크루",
-    area: "59㎡ (24평)",
-    type: "전세",
-    price: "전세 5.2억 ~ 5.7억",
-    desc: "은평뉴타운 내 신축급 단지. 6호선 역촌역, 학교·공원 인접 쾌적환경",
-    region: "은평구 대조동",
-    commute: { seoulStation: "30분 (6호선→1호선)", munjeong: "60분 (6호선→8호선)" }
-  }
+// ── Constants ──────────────────────────────
+const TOTAL_BUDGET   = 600000000;
+const MAX_LOAN_LIMIT = 300000000;
+const BORROWER_RATE  = 0.0295;
+
+// ── Data ───────────────────────────────────
+const PROPS = [
+  {id:1,name:'은평뉴타운 힐스테이트',addr:'서울 은평구 진관동',area:84,deposit:52000,rent:0,type:'전세',units:1234,year:2011,ca:35,caGtx:20,cb:50,tags:['GTX-A','역세권','신축'],desc:'GTX-A 연신내역 도보 5분. 2027년 서울역 20분.',fav:false,memo:''},
+  {id:2,name:'진관 e편한세상',addr:'서울 은평구 진관동',area:74,deposit:45000,rent:0,type:'전세',units:876,year:2013,ca:32,caGtx:18,cb:45,tags:['GTX-A','공원뷰'],desc:'자연환경 우수. GTX-A 연신내 버스 8분.',fav:false,memo:''},
+  {id:3,name:'구산역 래미안',addr:'서울 은평구 구산동',area:59,deposit:38000,rent:0,type:'전세',units:543,year:2007,ca:38,caGtx:null,cb:55,tags:['6호선','역세권'],desc:'구산역 도보 3분. 마포·용산 환승 편리.',fav:false,memo:''},
+  {id:4,name:'구파발 9단지 래미안',addr:'서울 은평구 진관동',area:59,deposit:35000,rent:0,type:'전세',units:1068,year:2008,ca:28,caGtx:15,cb:65,tags:['GTX-A★','대단지'],desc:'GTX-A 2027년 개통 후 서울역 15분.',fav:true,memo:'층수 확인 필요'},
+  {id:5,name:'꿈에그린 (한화)',addr:'서울 은평구 응암동',area:64,deposit:40000,rent:0,type:'전세',units:756,year:2010,ca:30,caGtx:18,cb:48,tags:['GTX-A','공원뷰'],desc:'응암역 도보 5분. GTX-A 연신내 환승.',fav:false,memo:''},
+  {id:6,name:'박석고개 힐스테이트',addr:'서울 은평구 불광동',area:76,deposit:48000,rent:0,type:'전세',units:895,year:2015,ca:32,caGtx:20,cb:42,tags:['GTX-A','학세권'],desc:'불광역 인근. 초중고 도보권.',fav:false,memo:''},
+  {id:7,name:'DMC 한양수자인',addr:'서울 마포구 상암동',area:84,deposit:55000,rent:0,type:'전세',units:1450,year:2012,ca:25,caGtx:null,cb:35,tags:['DMC','역세권','대단지'],desc:'DMC역 도보 5분. 상암IT단지 직결.',fav:false,memo:''},
+  {id:8,name:'수색 증산 센트럴',addr:'서울 은평구 수색동',area:59,deposit:32000,rent:30,type:'월세',units:234,year:2018,ca:28,caGtx:null,cb:40,tags:['신축','경의중앙선'],desc:'수색역 도보 3분. 경의중앙선·공항철도.',fav:false,memo:''},
+  {id:9,name:'녹번역 e편한세상',addr:'서울 은평구 녹번동',area:74,deposit:43000,rent:0,type:'전세',units:678,year:2016,ca:22,caGtx:null,cb:38,tags:['3호선','역세권','신축'],desc:'녹번역 도보 5분. 3호선 직결.',fav:false,memo:''},
+  {id:10,name:'상암 DMC 래미안',addr:'서울 마포구 상암동',area:84,deposit:58000,rent:0,type:'전세',units:1200,year:2009,ca:25,caGtx:null,cb:35,tags:['DMC','대단지','한강뷰'],desc:'디지털미디어시티역 도보 7분. 한강조망.',fav:false,memo:''},
 ];
 
-/* ── Render Recommended Estates ── */
-function renderRecommendedEstates() {
-  const grid = document.getElementById('recommendedGrid');
-  if (!grid) return;
-  grid.innerHTML = recommendedEstates.map(estate => {
-    const badgeClass = estate.badge === '전세' ? 'jeonse' : 'wolse';
-    return `
-      <div class="card listing-card">
-        <span class="listing-badge ${badgeClass}">${estate.badge}</span>
-        <div class="listing-name">${estate.name}</div>
-        <div class="listing-location">${estate.region}</div>
-        <div class="listing-specs">
-          <span class="listing-spec"><span class="spec-icon">📐</span> ${estate.area}</span>
-          <span class="listing-spec"><span class="spec-icon">🏷️</span> ${estate.type}</span>
-        </div>
-        <div class="listing-price">${estate.price}</div>
-        <div class="listing-price-sub">${estate.desc}</div>
-        <div class="listing-tags">
-          <span class="listing-tag">🚉 서울역 ${estate.commute.seoulStation}</span>
-          <span class="listing-tag">🏢 문정동 ${estate.commute.munjeong}</span>
-        </div>
-      </div>
-    `;
+// ── State ──────────────────────────────────
+let gtxActive = false;
+let filtered = [...PROPS];
+let schedules = JSON.parse(localStorage.getItem('schedules')||'[]');
+let fbDb = null, fbPath = '', fbListener = null;
+let mapInited = false;
+
+// ── Utils ──────────────────────────────────
+function toast(msg, dur){
+  dur=dur||2200;
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},dur);
+}
+
+function fmt(v){
+  if(!v) return '-';
+  if(v>=10000) return (v/10000).toFixed(1)+'억';
+  return v.toLocaleString()+'만';
+}
+
+function fmtWon(v){
+  if(v>=100000000) return (v/100000000).toFixed(2)+'억원';
+  if(v>=10000) return Math.round(v/10000).toLocaleString()+'만원';
+  return Math.round(v).toLocaleString()+'원';
+}
+
+function getCA(p){ return gtxActive && p.caGtx ? p.caGtx : p.ca; }
+
+// ── Navigation ─────────────────────────────
+function showPg(id){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('#tabs .tab').forEach(function(t){t.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+  var map={'pg-search':0,'pg-favs':1,'pg-rts':2,'pg-map':3,'pg-sched':4,'pg-settings':5,'pg-loan':6};
+  var idx=map[id];
+  if(idx!==undefined) document.querySelectorAll('#tabs .tab')[idx].classList.add('on');
+  if(id==='pg-favs') renderFavs();
+  if(id==='pg-sched'){ renderSched(); }
+  if(id==='pg-loan') calcL();
+  if(id==='pg-map') initMap();
+}
+
+// ── GTX Toggle ─────────────────────────────
+function toggleGTX(){
+  gtxActive=!gtxActive;
+  var track=document.getElementById('gtx-track');
+  var lbl=document.getElementById('gtx-lbl');
+  var badge=document.getElementById('gtx-badge');
+  if(gtxActive){
+    track.classList.add('on'); lbl.textContent='ON'; lbl.style.color='var(--gtx)';
+    if(badge) badge.style.display='block';
+  } else {
+    track.classList.remove('on'); lbl.textContent='OFF'; lbl.style.color='';
+    if(badge) badge.style.display='none';
+  }
+  applyF();
+  if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
+}
+
+// ── Filter / Sort ──────────────────────────
+function qf(s){
+  document.getElementById('fkw').value=s;
+  applyF();
+}
+
+function applyF(){
+  var kw=(document.getElementById('fkw').value||'').toLowerCase();
+  var sort=document.getElementById('fsort').value;
+  var type=document.getElementById('ftype').value;
+  var maxV=parseInt(document.getElementById('fmax').value)||0;
+
+  filtered=PROPS.filter(function(p){
+    if(type && p.type!==type) return false;
+    if(maxV && p.deposit>maxV*10000) return false;
+    if(kw){
+      var hay=(p.name+p.addr+p.tags.join()+p.desc).toLowerCase();
+      if(!hay.includes(kw)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a,b){
+    if(sort==='dep_asc') return a.deposit-b.deposit;
+    if(sort==='dep_desc') return b.deposit-a.deposit;
+    if(sort==='area') return b.area-a.area;
+    if(sort==='year') return b.year-a.year;
+    if(sort==='com') return (getCA(a)+a.cb)-(getCA(b)+b.cb);
+    return 0;
+  });
+
+  renderCards();
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById('s-cnt').textContent=filtered.length;
+  if(!filtered.length){
+    document.getElementById('s-avg').textContent='-';
+    document.getElementById('s-comm').textContent='-';
+    return;
+  }
+  var avgDep=Math.round(filtered.reduce(function(a,p){return a+p.deposit;},0)/filtered.length);
+  var avgComm=Math.round(filtered.reduce(function(a,p){return a+getCA(p)+p.cb;},0)/filtered.length);
+  document.getElementById('s-avg').textContent=fmt(avgDep);
+  document.getElementById('s-comm').textContent=avgComm+'분';
+}
+
+// ── Cards ──────────────────────────────────
+function renderCards(){
+  var el=document.getElementById('card-list');
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--sub)">검색 결과가 없습니다</div>';
+    return;
+  }
+  var budget=TOTAL_BUDGET/10000;
+  el.innerHTML=filtered.map(function(p){
+    var ca=getCA(p);
+    var total=ca+p.cb;
+    var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
+    var pct=Math.min(100,Math.round(p.deposit/budget*100));
+    var bc=pct>90?'var(--danger)':pct>70?'var(--warn)':'var(--accent2)';
+    var favIcon=p.fav?'⭐':'☆';
+    var priceStr=p.type==='월세'?('보'+fmt(p.deposit)+'/월'+fmt(p.rent)):('전세 '+fmt(p.deposit));
+    var commHtml=hasGtx?('<s style="opacity:.5">'+p.ca+'</s> <span style="color:var(--gtx);font-weight:700">'+p.caGtx+'</span>'):ca;
+    return '<div class="card" onclick="openMo('+p.id+')">'
+      +'<div class="card-head">'
+      +'<div class="card-name">'+p.name+'</div>'
+      +'<button class="fav-btn" onclick="event.stopPropagation();toggleFav('+p.id+')">'+favIcon+'</button>'
+      +'</div>'
+      +'<div class="card-head" style="margin-bottom:8px">'
+      +'<div class="card-price">'+priceStr+'</div>'
+      +'<div style="font-size:.75rem;color:var(--sub)">'+p.area+'㎡ · '+p.year+'년</div>'
+      +'</div>'
+      +'<div style="margin-bottom:8px"><div style="font-size:.72rem;color:var(--sub);margin-bottom:3px">예산 대비 '+pct+'%</div>'
+      +'<div class="bbar"><div class="bbar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'
+      +'<div class="card-tags">'+p.tags.map(function(t){return '<span class="tag'+(t.includes('GTX')?' gtx':'')+'">'+t+'</span>';}).join('')+'</div>'
+      +'<div style="font-size:.78rem;color:var(--sub);margin-top:6px;display:flex;gap:8px">'
+      +'<span>🏢A: '+commHtml+'분</span><span>🏢B: '+p.cb+'분</span><span>합: '+total+'분</span>'
+      +'</div>'
+      +(p.memo?'<div style="font-size:.73rem;color:var(--accent2);margin-top:4px">📝 '+p.memo+'</div>':'')
+      +'</div>';
   }).join('');
 }
 
-renderRecommendedEstates();
-
-/* ── Intersection Observer for fade-in ── */
-const observer = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) {
-entry.target.classList.add('visible');
-}
-});
-}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-
-document.querySelectorAll('section:not(.hero)').forEach(s => observer.observe(s));
-
-/* ── Sticky Nav ── */
-let lastScroll = 0;
-const topNav = document.getElementById('topNav');
-window.addEventListener('scroll', () => {
-const y = window.scrollY;
-topNav.classList.toggle('visible', y > 500);
-lastScroll = y;
-}, { passive: true });
-
-/* ── Deposit slider ── */
-function updateDeposit(el) {
-const v = parseInt(el.value);
-const pct = (v / 70000) * 100;
-el.style.setProperty('--pct', pct + '%');
-const eok = Math.floor(v / 10000);
-const man = v % 10000;
-let text = '';
-if (eok > 0) text += eok + '억';
-if (man > 0) text += ' ' + man.toLocaleString() + '만원';
-if (eok === 0 && man === 0) text = '0원';
-else if (man === 0) text += '원';
-document.getElementById('depositDisplay').textContent = text;
+// ── Favorites ──────────────────────────────
+function toggleFav(id){
+  var p=PROPS.find(function(x){return x.id===id;});
+  if(!p) return;
+  p.fav=!p.fav;
+  toast(p.fav?'⭐ '+p.name+' 즐겨찾기 추가':'☆ 즐겨찾기 해제');
+  updateFavTabCount();
+  applyF();
+  if(fbDb) syncFavsToFirebase();
 }
 
+function updateFavTabCount(){
+  var n=PROPS.filter(function(p){return p.fav;}).length;
+  document.getElementById('fav-cnt-tab').textContent=n?' ('+n+')':'';
+}
+
+function renderFavs(){
+  var favs=PROPS.filter(function(p){return p.fav;});
+  var el=document.getElementById('favs-wrap');
+  if(!favs.length){
+    el.innerHTML='<div class="favs-empty"><div style="font-size:3rem">⭐</div><div>즐겨찾기한 매물이 없습니다</div><div style="font-size:.8rem;margin-top:8px">탐색 탭에서 ⭐ 버튼을 눌러 추가하세요</div></div>';
+    return;
+  }
+  var avgDep=Math.round(favs.reduce(function(a,p){return a+p.deposit;},0)/favs.length);
+  var avgCom=Math.round(favs.reduce(function(a,p){return a+getCA(p)+p.cb;},0)/favs.length);
+  var statsHtml='<div class="stat-row">'
+    +'<div class="stat-box"><div class="sv">'+favs.length+'</div><div class="sk">즐겨찾기</div></div>'
+    +'<div class="stat-box"><div class="sv">'+fmt(avgDep)+'</div><div class="sk">평균보증금</div></div>'
+    +'<div class="stat-box"><div class="sv">'+avgCom+'분</div><div class="sk">평균통근</div></div>'
+    +'</div>';
+  var tableHtml='<div class="fav-compare"><table>'
+    +'<tr><th>이름</th><th>보증금</th><th>면적</th><th>통근합</th><th>-</th></tr>'
+    +favs.map(function(p){return '<tr><td style="font-weight:600">'+p.name.substring(0,7)+'</td>'
+      +'<td>'+fmt(p.deposit)+'</td><td>'+p.area+'㎡</td>'
+      +'<td>'+(getCA(p)+p.cb)+'분</td>'
+      +'<td><button onclick="toggleFav('+p.id+')" style="background:none;border:none;cursor:pointer;color:var(--danger)">✕</button></td></tr>';
+    }).join('')
+    +'</table></div>';
+  var cardsHtml=favs.map(function(p){
+    var ca=getCA(p);
+    var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
+    var commHtml=hasGtx?('<s style="opacity:.5">'+p.ca+'</s><span style="color:var(--gtx);font-weight:700"> '+p.caGtx+'</span>'):ca;
+    return '<div class="card" onclick="openMo('+p.id+')">'
+      +'<div class="card-head"><div class="card-name">'+p.name+'</div>'
+      +'<button class="fav-btn" onclick="event.stopPropagation();toggleFav('+p.id+')">⭐</button></div>'
+      +'<div style="font-size:.95rem;font-weight:700;color:var(--accent);margin-bottom:6px">'+fmt(p.deposit)+' '+p.type+'</div>'
+      +'<div style="font-size:.78rem;color:var(--sub);display:flex;gap:8px">'
+      +'<span>🏢A: '+commHtml+'분</span><span>🏢B: '+p.cb+'분</span><span>합: '+(ca+p.cb)+'분</span></div>'
+      +(p.memo?'<div style="font-size:.78rem;color:var(--accent2);margin-top:6px">📝 '+p.memo+'</div>':'')
+      +'</div>';
+  }).join('');
+  el.innerHTML=statsHtml+tableHtml+cardsHtml;
+}
+
+// ── Modal ──────────────────────────────────
+function openMo(id){
+  var p=PROPS.find(function(x){return x.id===id;});
+  if(!p) return;
+  var ca=getCA(p);
+  var total=ca+p.cb;
+  var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
+  var budget=TOTAL_BUDGET/10000;
+  var pct=Math.min(100,Math.round(p.deposit/budget*100));
+  var remain=budget-p.deposit;
+  var priceStr=p.type==='월세'?('보'+fmt(p.deposit)+'/월'+fmt(p.rent)):('전세 '+fmt(p.deposit));
+  var commA=hasGtx?('<s>'+p.ca+'</s><span style="color:var(--gtx);font-weight:700"> '+p.caGtx+'</span>'):ca;
+  document.getElementById('mo-content').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    +'<div style="font-size:1.1rem;font-weight:700">'+p.name+'</div>'
+    +'<button onclick="closeMo()" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button></div>'
+    +'<div class="mo-sect">📍 기본 정보</div>'
+    +'<div class="mo-row"><span class="mk">주소</span><span class="mv">'+p.addr+'</span></div>'
+    +'<div class="mo-row"><span class="mk">유형</span><span class="mv">'+p.type+'</span></div>'
+    +'<div class="mo-row"><span class="mk">가격</span><span class="mv" style="color:var(--accent)">'+priceStr+'</span></div>'
+    +'<div class="mo-row"><span class="mk">면적</span><span class="mv">'+p.area+'㎡ ('+Math.round(p.area/3.3)+'평)</span></div>'
+    +'<div class="mo-row"><span class="mk">세대수</span><span class="mv">'+p.units.toLocaleString()+'세대</span></div>'
+    +'<div class="mo-row"><span class="mk">준공연도</span><span class="mv">'+p.year+'년 ('+( new Date().getFullYear()-p.year)+'년차)</span></div>'
+    +'<div class="mo-sect">💰 예산 분석</div>'
+    +'<div class="mo-row"><span class="mk">총예산</span><span class="mv">6억</span></div>'
+    +'<div class="mo-row"><span class="mk">주택비용</span><span class="mv" style="color:var(--accent)">'+fmt(p.deposit)+'</span></div>'
+    +'<div class="mo-row"><span class="mk">예산 대비</span><span class="mv" style="color:'+(pct>90?'var(--danger)':pct>70?'var(--warn)':'var(--accent2)')+'">'+pct+'%</span></div>'
+    +'<div class="mo-row"><span class="mk">잔여 예산</span><span class="mv">'+fmt(Math.max(0,remain))+(remain<0?' <span style="color:var(--danger)">(초과)</span>':'')+'</span></div>'
+    +'<div class="mo-sect">🚇 통근 분석</div>'
+    +'<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'
+    +'<div class="comm-item">'+(hasGtx?'<div class="comm-orig">'+p.ca+'분</div><div class="comm-min gtx">'+p.caGtx+'분</div>':'<div class="comm-min">'+ca+'분</div>')+'<div class="comm-label">회사A</div></div>'
+    +'<div style="color:var(--sub)">+</div>'
+    +'<div class="comm-item"><div class="comm-min">'+p.cb+'분</div><div class="comm-label">회사B</div></div>'
+    +'<div style="color:var(--sub)">=</div>'
+    +'<div class="comm-item"><div class="comm-min '+(hasGtx?'gtx':'')+'">'+total+'분</div><div class="comm-label">일일 합계</div></div>'
+    +'</div>'
+    +(hasGtx?'<div style="font-size:.78rem;color:var(--gtx);background:#f5f3ff;padding:6px 10px;border-radius:6px;margin-bottom:8px">⚡ GTX-A 2027 개통 후 '+p.ca+'분→'+p.caGtx+'분 단축</div>':'')
+    +'<div class="mo-sect">🏷️ 태그</div>'
+    +'<div class="card-tags" style="margin-bottom:10px">'+p.tags.map(function(t){return '<span class="tag'+(t.includes('GTX')?' gtx':'')+'">'+t+'</span>';}).join('')+'</div>'
+    +'<div class="mo-sect">📋 설명</div>'
+    +'<div style="font-size:.82rem;color:var(--sub);line-height:1.6;margin-bottom:10px">'+p.desc+'</div>'
+    +'<div class="mo-sect">📝 메모</div>'
+    +'<textarea class="mo-memo" id="mo-memo-'+p.id+'" placeholder="메모를 입력하세요...">'+(p.memo||'')+'</textarea>'
+    +'<button class="mo-btn" onclick="saveMemo('+p.id+')">메모 저장</button>'
+    +'<button class="mo-btn" style="background:'+(p.fav?'var(--warn)':'var(--accent2)')+';margin-top:6px" onclick="toggleFav('+p.id+');closeMo()">'+(p.fav?'⭐ 즐겨찾기 해제':'☆ 즐겨찾기 추가')+'</button>';
+  document.getElementById('mo').classList.add('open');
+}
+
+function closeMo(){
+  document.getElementById('mo').classList.remove('open');
+}
+
+function saveMemo(id){
+  var p=PROPS.find(function(x){return x.id===id;});
+  if(!p) return;
+  var el=document.getElementById('mo-memo-'+id);
+  if(!el) return;
+  p.memo=el.value;
+  toast('📝 메모 저장 완료');
+  applyF();
+  if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
+  if(fbDb) saveMemoToFirebase(id,p.memo);
+}
+
+// ── Real Estate Prices ─────────────────────
+function setRtsCode(code,name,ym){
+  document.getElementById('rts-lawdcd').value=code;
+  document.getElementById('rts-ym').value=ym;
+  document.querySelectorAll('.rts-code-btns button').forEach(function(b){
+    b.classList.toggle('on', b.textContent.trim()===name);
+  });
+}
+
+function showRtsState(state,msg){
+  var el=document.getElementById('rts-result');
+  if(state==='loading') el.innerHTML='<div class="rts-state">⏳ 조회 중...</div>';
+  else if(state==='error') el.innerHTML='<div class="rts-state" style="color:var(--danger)">❌ '+(msg||'오류')+'</div>';
+}
+
+function genSampleData(guName){
+  var apts=['힐스테이트','래미안','e편한세상','자이','푸르지오','더샵'];
+  var areas=[59,74,84,99];
+  return Array.from({length:20},function(_,i){
+    return {
+      aptName:guName+' '+apts[i%apts.length]+' '+(Math.ceil((i+1)/apts.length))+'단지',
+      area:String(areas[i%4]),
+      deposit:String(Math.round((2+Math.random()*4)*10000)),
+      monthlyRent:'0',
+      dealYear:'2026',dealMonth:'04',dealDay:String(Math.ceil(Math.random()*28)),
+      floor:String(Math.ceil(Math.random()*25))
+    };
+  });
+}
+
+async function fetchRTS(){
+  var lawdCd=document.getElementById('rts-lawdcd').value.trim();
+  var dealYmd=document.getElementById('rts-ym').value.trim();
+  var aptFilter=document.getElementById('rts-apt').value.trim();
+  if(!lawdCd||!/^\d{5}$/.test(lawdCd)){toast('⚠️ 법정동 코드 5자리 확인');return;}
+  if(!dealYmd||!/^\d{6}$/.test(dealYmd)){toast('⚠️ 연월 6자리 확인 (예: 202604)');return;}
+  showRtsState('loading');
+  document.getElementById('rts-btn').disabled=true;
+  var apiKey=localStorage.getItem('api-molit')||'';
+  var items=[];
+  if(!apiKey){
+    await new Promise(function(r){setTimeout(r,500);});
+    var guNames={'11710':'송파구','11380':'은평구','11440':'마포구','11170':'용산구','11200':'성동구','11650':'서초구','11680':'강남구'};
+    items=genSampleData(guNames[lawdCd]||'서울');
+    toast('ℹ️ 샘플 데이터 표시 (API 키 미설정)');
+  } else {
+    try{
+      var params=new URLSearchParams({lawdCd:lawdCd,dealYmd:dealYmd,numOfRows:500});
+      var res=await fetch('/api/rent?'+params);
+      if(!res.ok){var err=await res.json();throw new Error(err.error||'HTTP '+res.status);}
+      var json=await res.json();
+      items=json.items||[];
+    }catch(e){
+      showRtsState('error',e.message);
+      document.getElementById('rts-btn').disabled=false;
+      return;
+    }
+  }
+  var results=items.filter(function(item){
+    if(!item.aptName) return false;
+    if(aptFilter&&!item.aptName.includes(aptFilter)) return false;
+    return true;
+  });
+  document.getElementById('rts-btn').disabled=false;
+  renderRTS(results,dealYmd);
+}
+
+function renderRTS(items,ym){
+  var el=document.getElementById('rts-result');
+  if(!items.length){el.innerHTML='<div class="rts-state">검색 결과가 없습니다</div>';return;}
+  var sorted=[].concat(items).sort(function(a,b){
+    var da=parseFloat(String(a.deposit||0).replace(/,/g,''));
+    var db=parseFloat(String(b.deposit||0).replace(/,/g,''));
+    return db-da;
+  });
+  el.innerHTML='<div style="font-size:.8rem;color:var(--sub);margin-bottom:8px">'+ym.slice(0,4)+'년 '+ym.slice(4)+'월 · 총 '+items.length+'건</div>'
+  +sorted.map(function(item){
+    var dep=parseFloat(String(item.deposit||0).replace(/,/g,''));
+    var mon=parseFloat(String(item.monthlyRent||0).replace(/,/g,''));
+    var priceStr=mon>0?('보'+dep.toLocaleString()+'만/월'+mon.toLocaleString()+'만'):('전세 '+dep.toLocaleString()+'만');
+    var area=parseFloat(item.area||0).toFixed(1);
+    return '<div class="rts-item"><div class="ri-name">'+item.aptName+'</div>'
+      +'<div class="ri-price">'+priceStr+'</div>'
+      +'<div class="ri-meta">'+area+'㎡ · '+(item.floor||'-')+'층 · '+ym.slice(0,4)+'.'+ym.slice(4)+(item.dealDay?'.'+item.dealDay:'')+'</div></div>';
+  }).join('');
+}
+
+// ── Map ────────────────────────────────────
+function initMap(){
+  if(mapInited) return;
+  var key=localStorage.getItem('api-kakao');
+  if(!key) return;
+  if(window.kakao&&window.kakao.maps){createMap();return;}
+  var s=document.createElement('script');
+  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+key+'&autoload=false';
+  s.onload=function(){kakao.maps.load(function(){createMap();});};
+  s.onerror=function(){toast('❌ 카카오맵 로드 실패');};
+  document.head.appendChild(s);
+}
+
+function createMap(){
+  var el=document.getElementById('map');
+  document.getElementById('map-placeholder').style.display='none';
+  el.style.display='block';
+  var map=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(37.6197,126.9393),level:5});
+  var coords=[[37.628,126.9298],[37.626,126.9278],[37.6131,126.9267],[37.653,126.9191],
+    [37.5983,126.9215],[37.6044,126.9297],[37.5777,126.8976],[37.5815,126.8921],
+    [37.6067,126.9233],[37.5734,126.899]];
+  PROPS.forEach(function(p,i){
+    if(!coords[i]) return;
+    var pos=new kakao.maps.LatLng(coords[i][0],coords[i][1]);
+    var marker=new kakao.maps.Marker({map:map,position:pos});
+    var info=new kakao.maps.InfoWindow({content:'<div style="padding:5px;font-size:.8rem;font-weight:600">'+p.name+'<br>'+fmt(p.deposit)+'</div>'});
+    kakao.maps.event.addListener(marker,'click',function(){info.open(map,marker);});
+  });
+  mapInited=true;
+}
+
+// ── Schedule ───────────────────────────────
+function renderSched(){
+  var el=document.getElementById('sched-list');
+  if(!schedules.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--sub)">등록된 일정이 없습니다</div>';
+    return;
+  }
+  var today=new Date(); today.setHours(0,0,0,0);
+  var sorted=[].concat(schedules).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  el.innerHTML=sorted.map(function(s){
+    var d=new Date(s.date); d.setHours(0,0,0,0);
+    var diff=Math.round((d-today)/(1000*60*60*24));
+    var ddayStr=diff===0?'D-Day':diff>0?'D-'+diff:'D+'+Math.abs(diff);
+    var ddayCol=diff===0?'var(--danger)':diff<0?'var(--sub)':'var(--accent)';
+    return '<div class="sched-item">'
+      +'<div class="sched-dday" style="color:'+ddayCol+'">'+ddayStr+'</div>'
+      +'<div class="sched-info">'
+      +'<div class="sched-title">'+s.title+'</div>'
+      +'<div class="sched-date">'+s.date+(s.memo?' · '+s.memo:'')+'</div>'
+      +'</div>'
+      +'<button class="sched-del" onclick="delSched(\''+s.id+'\')">🗑️</button>'
+      +'</div>';
+  }).join('');
+}
+
+function addSched(){
+  var title=document.getElementById('sc-title').value.trim();
+  var date=document.getElementById('sc-date').value;
+  var memo=document.getElementById('sc-memo').value.trim();
+  if(!title){toast('⚠️ 일정 제목을 입력하세요');return;}
+  if(!date){toast('⚠️ 날짜를 입력하세요');return;}
+  schedules.push({id:Date.now().toString(),title:title,date:date,memo:memo});
+  localStorage.setItem('schedules',JSON.stringify(schedules));
+  document.getElementById('sc-title').value='';
+  document.getElementById('sc-date').value='';
+  document.getElementById('sc-memo').value='';
+  toast('📅 일정 추가 완료');
+  renderSched();
+}
+
+function delSched(id){
+  schedules=schedules.filter(function(s){return s.id!==id;});
+  localStorage.setItem('schedules',JSON.stringify(schedules));
+  toast('🗑️ 일정 삭제');
+  renderSched();
+}
+
+// ── Settings ───────────────────────────────
+function saveSettings(){
+  var kakao=document.getElementById('s-kakao').value.trim();
+  var molit=document.getElementById('s-molit').value.trim();
+  if(kakao) localStorage.setItem('api-kakao',kakao);
+  if(molit) localStorage.setItem('api-molit',molit);
+  toast('✅ API 키 저장 완료');
+  mapInited=false;
+}
+
+// ── Loan Calculator ────────────────────────
+function calcL(){
+  var priceWon=(parseFloat(document.getElementById('l-price').value)||0)*10000;
+  var selfWon=(parseFloat(document.getElementById('l-self').value)||0)*10000;
+  var years=parseInt(document.getElementById('l-years').value)||20;
+  var repayType=document.getElementById('l-type').value;
+  var el=document.getElementById('loan-result');
+  if(!priceWon){el.innerHTML='';return;}
+  var needLoan=Math.max(0,priceWon-selfWon);
+  var loanAmt=Math.min(needLoan,MAX_LOAN_LIMIT);
+  var selfShort=needLoan>MAX_LOAN_LIMIT?needLoan-MAX_LOAN_LIMIT:0;
+  var rate=BORROWER_RATE;
+  var mRate=rate/12;
+  var n=years*12;
+  var monthlyPayment=0;
+  if(loanAmt>0&&mRate>0){
+    if(repayType==='equal'){
+      monthlyPayment=loanAmt*mRate*Math.pow(1+mRate,n)/(Math.pow(1+mRate,n)-1);
+    } else {
+      monthlyPayment=(loanAmt/n)+(loanAmt*mRate);
+    }
+  }
+  var totalPay=repayType==='equal'?monthlyPayment*n:loanAmt+(loanAmt*mRate*(n+1)/2);
+  var totalInterest=totalPay-loanAmt;
+  var withinBudget=priceWon<=TOTAL_BUDGET;
+  el.innerHTML='<div class="loan-result">'
+    +'<div class="lr-main">월 '+fmtWon(Math.round(monthlyPayment))+'</div>'
+    +'<div class="lr-sub">'+(repayType==='equal'?'원리금균등':'원금균등(초회)')+' · 금리 '+(rate*100).toFixed(2)+'% · '+years+'년</div>'
+    +'</div>'
+    +'<div class="loan-grid">'
+    +'<div class="loan-box"><div class="lv" style="color:var(--accent)">'+fmtWon(loanAmt)+'</div><div class="lk">대출금액</div></div>'
+    +'<div class="loan-box"><div class="lv">'+fmtWon(Math.round(totalInterest))+'</div><div class="lk">총 이자</div></div>'
+    +'<div class="loan-box"><div class="lv">'+fmtWon(Math.round(totalPay))+'</div><div class="lk">총 상환액</div></div>'
+    +'<div class="loan-box"><div class="lv" style="color:'+(withinBudget?'var(--accent2)':'var(--danger)')+'">'+( withinBudget?'✅ 가능':'❌ 초과')+'</div><div class="lk">예산 내</div></div>'
+    +'</div>'
+    +'<div style="font-size:.78rem;color:var(--sub);margin-top:10px;line-height:1.7">'
+    +'<div>주택가격: '+fmtWon(priceWon)+'</div>'
+    +'<div>자체자금: '+fmtWon(selfWon)+'</div>'
+    +'<div>필요대출: '+fmtWon(needLoan)+'</div>'
+    +(selfShort?'<div style="color:var(--danger)">⚠️ 한도 초과 부족분: '+fmtWon(selfShort)+'</div>':'')
+    +'<div style="margin-top:6px;font-size:.73rem">※ COFIX 3.5% + 가산금리 1.45% − 서울시 지원 2.0% = 실부담 <strong>2.95%</strong></div>'
+    +'</div>';
+}
+
+// ── Firebase ───────────────────────────────
+function loadScript(src){
+  return new Promise(function(res,rej){
+    var s=document.createElement('script');
+    s.src=src; s.onload=res; s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function initFirebase(){
+  var fbUrl=document.getElementById('s-fb-url').value.trim();
+  var fbId=document.getElementById('s-fb-id').value.trim();
+  if(!fbUrl||!fbId){toast('⚠️ Firebase URL과 동기화 ID를 입력하세요');return;}
+  localStorage.setItem('fb-url',fbUrl);
+  localStorage.setItem('fb-id',fbId);
+  fbPath='sinhonjip/'+fbId;
+  try{
+    if(!window.firebase){
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js');
+    }
+    var app;
+    try{app=firebase.app('sinhonjip');}
+    catch(e){app=firebase.initializeApp({databaseURL:fbUrl},'sinhonjip');}
+    fbDb=firebase.database(app);
+    if(fbListener){fbListener.off();fbListener=null;}
+    fbListener=fbDb.ref(fbPath);
+    fbListener.on('value',function(snap){
+      var data=snap.val()||{};
+      if(data.favs) PROPS.forEach(function(p){p.fav=!!(data.favs[p.id]);});
+      if(data.memos) PROPS.forEach(function(p){p.memo=data.memos[p.id]||p.memo||'';});
+      updateFavTabCount();
+      applyF();
+      if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
+    });
+    setFbStatus(true);
+    toast('🔥 Firebase 연결 성공');
+  }catch(e){
+    setFbStatus(false,e.message);
+    toast('❌ Firebase 연결 실패: '+e.message,3500);
+  }
+}
+
+function disconnectFirebase(){
+  if(fbListener){fbListener.off();fbListener=null;}
+  fbDb=null; fbPath='';
+  localStorage.removeItem('fb-url');
+  localStorage.removeItem('fb-id');
+  document.getElementById('s-fb-url').value='';
+  document.getElementById('s-fb-id').value='';
+  setFbStatus(false);
+  toast('🔌 Firebase 연결 해제');
+}
+
+function setFbStatus(ok,msg){
+  var box=document.getElementById('fb-status-box');
+  var txt=document.getElementById('fb-status-text');
+  box.style.display='block';
+  if(ok){
+    box.style.background='#f0fdf4'; box.style.borderColor='#bbf7d0';
+    txt.style.color='var(--accent2)';
+    txt.textContent='✅ Firebase 연결됨 (실시간 동기화 활성화)';
+  } else {
+    box.style.background='#fff5f5'; box.style.borderColor='#fed7d7';
+    txt.style.color='var(--danger)';
+    txt.textContent='❌ 연결 안 됨'+(msg?' - '+msg:'');
+  }
+}
+
+function syncFavsToFirebase(){
+  if(!fbDb) return;
+  var favMap={};
+  PROPS.forEach(function(p){if(p.fav) favMap[p.id]=true;});
+  fbDb.ref(fbPath+'/favs').set(favMap).catch(function(){});
+}
+
+function saveMemoToFirebase(id,val){
+  if(!fbDb) return;
+  fbDb.ref(fbPath+'/memos/'+id).set(val).catch(function(){});
+}
+
+// ── Init ───────────────────────────────────
 (function(){
-const sl = document.getElementById('depositSlider');
-sl.style.setProperty('--pct', (parseInt(sl.value)/70000*100)+'%');
+  var kk=localStorage.getItem('api-kakao');
+  var ml=localStorage.getItem('api-molit');
+  if(kk) document.getElementById('s-kakao').value=kk;
+  if(ml) document.getElementById('s-molit').value=ml;
+  var fbUrl=localStorage.getItem('fb-url');
+  var fbId=localStorage.getItem('fb-id');
+  if(fbUrl&&fbId){
+    document.getElementById('s-fb-url').value=fbUrl;
+    document.getElementById('s-fb-id').value=fbId;
+    setTimeout(initFirebase,800);
+  }
+  var td=new Date().toISOString().split('T')[0];
+  document.getElementById('sc-date').value=td;
+  applyF();
+  updateFavTabCount();
+  calcL();
 })();
-
-/* ── Trade type toggle ── */
-function setTradeType(btn) {
-btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-btn.classList.add('active');
-}
-
-/* ── Area chip ── */
-function setArea(chip, size) {
-chip.parentElement.querySelectorAll('.area-chip').forEach(c => c.classList.remove('active'));
-chip.classList.add('active');
-}
-
-/* ── Calculator ── */
-function getBracket(income) {
-if (income <= 2000) return { support: 3.0, self: 1.5, label: '2천만원 이하' };
-if (income <= 4000) return { support: 2.5, self: 2.0, label: '2천~4천만원' };
-if (income <= 6000) return { support: 2.0, self: 2.5, label: '4천~6천만원' };
-if (income <= 8000) return { support: 1.5, self: 3.0, label: '6천~8천만원' };
-if (income <= 13000) return { support: 1.0, self: 3.5, label: '8천만~1.3억' };
-return { support: 0, self: 4.5, label: '지원 대상 외' };
-}
-
-function calculate() {
-const loan = parseFloat(document.getElementById('loanAmount').value) || 0;
-const income = parseFloat(document.getElementById('annualIncome').value) || 0;
-const bracket = getBracket(income);
-const marketRate = 4.5;
-
-const marketAnnual = loan * (marketRate / 100);
-const selfAnnual = loan * (bracket.self / 100);
-const marketMonthly = marketAnnual / 12;
-const selfMonthly = selfAnnual / 12;
-const monthlySave = marketMonthly - selfMonthly;
-const annualSave = marketAnnual - selfAnnual;
-
-document.getElementById('supportRate').textContent = bracket.support.toFixed(1) + '%';
-document.getElementById('selfRate').textContent = bracket.self.toFixed(1) + '%';
-document.getElementById('marketMonthly').textContent = formatMan(marketMonthly);
-document.getElementById('supportMonthly').textContent = formatMan(selfMonthly);
-document.getElementById('monthlySavings').textContent = '▼ ' + formatMan(monthlySave);
-document.getElementById('annualSavings').textContent = '▼ ' + formatMan(annualSave);
-
-const info = document.getElementById('bracketInfo');
-if (bracket.support === 0) {
-info.innerHTML = '⚠️ 연소득 1.3억 초과: 이자지원 대상이 아닙니다';
-info.style.borderColor = 'rgba(239,68,68,0.3)';
-info.style.background = 'rgba(239,68,68,0.08)';
-info.style.color = '#f87171';
-} else {
-info.innerHTML = '💡 소득구간: ' + bracket.label + '<br>서울시 이자지원 ' + bracket.support.toFixed(1) + '% \xB7 본인부담 ' + bracket.self.toFixed(1) + '%';
-info.style.borderColor = 'rgba(74,144,217,0.2)';
-info.style.background = 'rgba(74,144,217,0.08)';
-info.style.color = '#6aabf0';
-}
-}
-
-function formatMan(v) {
-return v.toFixed(1) + '만원';
-}
-
-calculate();
-
-/* ── D-Day Counter ── */
-function updateDday() {
-const wedding = new Date(2026, 10, 14);
-const today = new Date();
-today.setHours(0,0,0,0);
-const diff = Math.ceil((wedding - today) / (1000 * 60 * 60 * 24));
-const el = document.getElementById('ddayCount');
-if (diff > 0) {
-el.textContent = 'D-' + diff;
-} else if (diff === 0) {
-el.textContent = 'D-Day!';
-} else {
-el.textContent = 'D+' + Math.abs(diff);
-}
-}
-updateDday();
 </script>
 </body>
 </html>
