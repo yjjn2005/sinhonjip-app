@@ -89,25 +89,31 @@
     function parseXmlResponse(xml) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xml, 'text/xml');
-      const items = doc.querySelectorAll('item');
+      // getElementsByTagName works reliably with Korean tag names; querySelectorAll does not
+      const items = Array.from(doc.getElementsByTagName('item'));
       const result = [];
       items.forEach(item => {
-        const get = (tag) => item.querySelector(tag)?.textContent?.trim() || '';
+        const get = (tag) => {
+          const el = item.getElementsByTagName(tag)[0];
+          return el ? el.textContent.trim() : '';
+        };
+        const rent = parseInt((get('월세금액') || '0').replace(/,/g, '')) || 0;
         result.push({
           aptName: get('아파트'),
           dong: get('법정동'),
-          area: parseFloat(get('전용면적') || '0'),
-          deposit: parseInt((get('보증금액') || '0').replace(/,/g, '')),
-          monthlyRent: parseInt((get('월세금액') || '0').replace(/,/g, '')),
+          area: parseFloat(get('전용면적') || '0') || 0,
+          deposit: parseInt((get('보증금액') || '0').replace(/,/g, '')) || 0,
+          monthlyRent: rent,
           floor: get('층'),
           buildYear: get('건축년도'),
           dealYear: get('년'),
-          dealMonth: get('월').padStart(2, '0'),
-          dealDay: get('일').padStart(2, '0'),
-          type: parseInt((get('월세금액') || '0').replace(/,/g, '')) > 0 ? '반전세' : '전세',
+          dealMonth: (get('월') || '').padStart(2, '0'),
+          dealDay: (get('일') || '').padStart(2, '0'),
+          type: rent > 0 ? '월세' : '전세',
         });
       });
-      return result;
+      // 빈 항목(아파트명 없는 것) 제거
+      return result.filter(r => r.aptName);
     }
     function stringSimilarity(a, b) {
       if (!a || !b) return 0;
@@ -131,7 +137,7 @@
           const nameSim = stringSimilarity(item.aptName, rep.aptName);
           const areaDiff = Math.abs(item.area - rep.area);
           const depositDiff = Math.abs(item.deposit - rep.deposit);
-          if (nameSim >= 0.8 && areaDiff <= 3 && depositDiff <= 500) {
+          if (nameSim >= 0.85 && areaDiff <= 2 && depositDiff <= 100) {
             group.count += 1;
             if ((item.dealYear + item.dealMonth + item.dealDay) >
                 (rep.dealYear + rep.dealMonth + rep.dealDay)) {
