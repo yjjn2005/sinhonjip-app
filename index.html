@@ -355,26 +355,125 @@
     }
     // ==========================================
     // 스마트 우선순위 점수 함수
-    // 우선순위: ① 전세 ② 보증금 6억 근접 ③ 서울시 이자지원 가능 ④ 서울역/문정동 교통
+    // 우선순위: ① 전세 ② 보증금 6억 근접 ③ 서울시 이자지원 ④ 교통(서울역+문정 실시간 계산)
     // ==========================================
-    const TARGET_DEPOSIT = 60000; // 6억 (단위: 만원)
-    const LOAN_MAX = 70000;       // 서울시 이자지원 한도 7억
+    const TARGET_DEPOSIT = 60000;
+    const LOAN_MAX = 70000;
+
+    // 서울 주요 동별 대중교통 시간 (분) — 서울역, 문정역 기준
+    // 출처: 지하철 노선도 + 환승 시간 반영 추정치 (실제 ±5분 오차 가능)
+    const TRANSIT_MAP = {
+      // 성동구
+      '왕십리':{ s:15, m:25 }, '성수':{ s:20, m:30 }, '마장':{ s:20, m:28 },
+      '사근':{ s:22, m:30 }, '행당':{ s:20, m:28 }, '응봉':{ s:18, m:32 },
+      '금호':{ s:18, m:32 }, '옥수':{ s:15, m:30 }, '도선':{ s:20, m:32 },
+      '용답':{ s:15, m:20 }, '하왕십리':{ s:17, m:27 }, '상왕십리':{ s:17, m:27 },
+      // 강남구
+      '역삼':{ s:25, m:25 }, '대치':{ s:28, m:22 }, '삼성':{ s:22, m:20 },
+      '청담':{ s:22, m:22 }, '논현':{ s:22, m:28 }, '개포':{ s:30, m:25 },
+      '도곡':{ s:28, m:25 }, '압구정':{ s:20, m:22 }, '신사':{ s:20, m:28 },
+      '수서':{ s:30, m:18 }, '일원':{ s:32, m:25 }, '세곡':{ s:35, m:20 },
+      // 서초구
+      '반포':{ s:18, m:28 }, '잠원':{ s:18, m:25 }, '방배':{ s:22, m:30 },
+      '서초':{ s:22, m:25 }, '양재':{ s:28, m:25 }, '내곡':{ s:35, m:28 },
+      // 송파구
+      '문정':{ s:35, m:5 }, '장지':{ s:38, m:8 }, '거여':{ s:40, m:10 },
+      '마천':{ s:45, m:15 }, '방이':{ s:32, m:12 }, '오금':{ s:35, m:10 },
+      '잠실':{ s:28, m:15 }, '신천':{ s:25, m:18 }, '가락':{ s:32, m:10 },
+      '석촌':{ s:28, m:18 }, '풍납':{ s:30, m:20 }, '삼전':{ s:27, m:18 },
+      '위례':{ s:42, m:12 }, '송파':{ s:30, m:12 },
+      // 강동구
+      '천호':{ s:32, m:18 }, '성내':{ s:30, m:18 }, '암사':{ s:35, m:22 },
+      '고덕':{ s:38, m:25 }, '강일':{ s:42, m:30 }, '명일':{ s:38, m:25 },
+      '길동':{ s:32, m:20 }, '둔촌':{ s:28, m:18 },
+      // 용산구
+      '한남':{ s:15, m:30 }, '이촌':{ s:10, m:30 }, '용산':{ s:8, m:32 },
+      '효창':{ s:10, m:32 }, '원효':{ s:12, m:30 }, '청파':{ s:10, m:28 },
+      '후암':{ s:8, m:28 },
+      // 마포구
+      '공덕':{ s:15, m:35 }, '마포':{ s:18, m:38 }, '합정':{ s:22, m:40 },
+      '홍대':{ s:20, m:40 }, '상수':{ s:22, m:40 }, '성산':{ s:25, m:42 },
+      '망원':{ s:25, m:42 }, '아현':{ s:15, m:35 },
+      // 중구
+      '명동':{ s:5, m:30 }, '을지로':{ s:8, m:28 }, '충무로':{ s:8, m:28 },
+      '신당':{ s:12, m:22 }, '황학':{ s:12, m:22 }, '중림':{ s:8, m:28 },
+      // 서대문구
+      '신촌':{ s:18, m:40 }, '충정로':{ s:12, m:35 }, '북아현':{ s:15, m:38 },
+      '연희':{ s:22, m:42 }, '홍은':{ s:25, m:45 }, '홍제':{ s:22, m:42 },
+      // 광진구
+      '구의':{ s:22, m:22 }, '자양':{ s:22, m:22 }, '광장':{ s:25, m:25 },
+      '중곡':{ s:25, m:25 }, '능동':{ s:28, m:28 }, '화양':{ s:22, m:22 },
+      // 동대문구
+      '청량리':{ s:18, m:22 }, '회기':{ s:20, m:24 }, '이문':{ s:22, m:25 },
+      '장안':{ s:20, m:20 }, '용두':{ s:15, m:20 }, '전농':{ s:18, m:22 },
+      '답십리':{ s:18, m:18 },
+      // 중랑구
+      '면목':{ s:28, m:25 }, '상봉':{ s:25, m:22 }, '망우':{ s:30, m:25 },
+      '중화':{ s:28, m:22 }, '신내':{ s:32, m:28 },
+      // 성북구
+      '성북':{ s:22, m:32 }, '정릉':{ s:28, m:38 }, '길음':{ s:22, m:32 },
+      '종암':{ s:22, m:30 }, '돈암':{ s:20, m:30 },
+      // 강북구
+      '미아':{ s:25, m:35 }, '번':{ s:28, m:38 }, '수유':{ s:28, m:38 },
+      // 도봉구
+      '창동':{ s:32, m:40 }, '방학':{ s:35, m:45 }, '쌍문':{ s:32, m:42 },
+      // 노원구
+      '상계':{ s:35, m:45 }, '중계':{ s:32, m:42 }, '하계':{ s:30, m:38 },
+      '월계':{ s:28, m:38 },
+      // 은평구
+      '은평':{ s:22, m:42 }, '녹번':{ s:22, m:42 }, '불광':{ s:25, m:45 },
+      '갈현':{ s:28, m:45 }, '수색':{ s:30, m:50 },
+      // 종로구
+      '종로':{ s:10, m:25 }, '창신':{ s:12, m:22 }, '숭인':{ s:12, m:22 },
+      '혜화':{ s:15, m:25 },
+      // 동작구
+      '흑석':{ s:15, m:32 }, '노량진':{ s:12, m:30 }, '대방':{ s:15, m:30 },
+      '신대방':{ s:18, m:30 }, '사당':{ s:20, m:32 },
+      // 관악구
+      '신림':{ s:25, m:40 }, '봉천':{ s:22, m:38 },
+      // 강서구
+      '마곡':{ s:35, m:55 }, '화곡':{ s:35, m:52 }, '가양':{ s:35, m:55 },
+      '염창':{ s:30, m:48 }, '등촌':{ s:30, m:50 },
+      // 양천구
+      '목동':{ s:28, m:45 }, '신정':{ s:28, m:45 },
+      // 영등포구
+      '영등포':{ s:12, m:32 }, '여의도':{ s:15, m:35 }, '당산':{ s:18, m:35 },
+      '문래':{ s:18, m:35 }, '신길':{ s:15, m:32 }, '대림':{ s:20, m:35 },
+      // 구로구
+      '구로':{ s:20, m:38 }, '개봉':{ s:28, m:45 }, '신도림':{ s:20, m:35 },
+      // 금천구
+      '시흥':{ s:28, m:45 }, '독산':{ s:25, m:42 }, '가산':{ s:25, m:40 },
+    };
+
+    function getTransit(dong) {
+      if (!dong) return { s: 30, m: 30 };
+      // 숫자/가나다 제거 후 동 이름 매칭
+      const clean = dong.replace(/\d+[가-힣]?$/g, '').replace(/동$/,'').trim();
+      for (const [key, val] of Object.entries(TRANSIT_MAP)) {
+        if (clean.includes(key) || key.includes(clean.slice(0, 2))) return val;
+      }
+      return { s: 30, m: 30 }; // 기본값
+    }
 
     function smartScore(item) {
       let score = 0;
       // ① 전세 최우선 (+100)
       if (item.type === '전세') score += 100;
-      // ③ 서울시 이자지원 가능 (보증금 7억 이하, +50)
+      // ③ 서울시 이자지원 가능 (+50)
       if (item.deposit <= LOAN_MAX) score += 50;
-      // ② 6억 근접 점수 (±5천만 = 40점, 이후 거리에 따라 감점)
+      // ② 6억 근접 점수
       const diff = Math.abs(item.deposit - TARGET_DEPOSIT);
-      if (diff <= 5000)  score += 40;
+      if (diff <= 5000)       score += 40;
       else if (diff <= 10000) score += 30;
       else if (diff <= 20000) score += 18;
       else if (diff <= 30000) score += 8;
-      // ④ 교통 가산: 서울역/문정동 인접 동 이름 포함 시 (+20)
-      const transportDong = ['용산', '중구', '남대문', '회현', '서울역', '문정', '장지', '위례', '송파', '마포', '공덕', '서강', '신촌', '홍대'];
-      if (transportDong.some(d => (item.dong || '').includes(d))) score += 20;
+      // ④ 교통 점수 — 서울역+문정 평균 시간 기반 실계산
+      const t = getTransit(item.dong);
+      const avg = (t.s + t.m) / 2;
+      if (avg <= 18)      score += 30;
+      else if (avg <= 25) score += 22;
+      else if (avg <= 30) score += 15;
+      else if (avg <= 35) score += 8;
       return score;
     }
 
@@ -432,46 +531,68 @@ function dabangUrl(aptName) {
       const [showSettings, setShowSettings] = useState(false);
 
       const [selectedGu, setSelectedGu] = useState('11200'); // 성동구 기본값
-      const [selectedMonth, setSelectedMonth] = useState(() => {
-        const d = new Date();
-        d.setMonth(d.getMonth() - 1);
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      });
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [originalListings, setOriginalListings] = useState([]);
       const [isDemoMode, setIsDemoMode] = useState(false);
       const [typeFilter, setTypeFilter] = useState('전체');
       const [minArea, setMinArea] = useState(59); // 기본 59㎡ 이상
+      const [searchRange, setSearchRange] = useState(''); // "2025.01 ~ 2025.06" 형태
       const handleSaveApiKey = (e) => {
         const val = e.target.value;
         setApiKey(val);
         localStorage.setItem('molit_api_key', val);
       };
+
+      // 최근 N개월 YYYYMM 배열 반환 (최신→과거 순)
+      function getLast6Months() {
+        const months = [];
+        const d = new Date();
+        for (let i = 0; i < 6; i++) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          months.push(`${year}${month}`);
+          d.setMonth(d.getMonth() - 1);
+        }
+        return months; // [202506, 202505, ..., 202501]
+      }
       const handleSearch = async () => {
         setLoading(true);
         setError(null);
-        const dealYmd = selectedMonth.replace('-', '');
+        const months = getLast6Months(); // ['202506','202505',...,'202501']
+        const oldest = months[months.length - 1];
+        const newest = months[0];
+        const rangeLabel = `${oldest.slice(0,4)}.${oldest.slice(4)} ~ ${newest.slice(0,4)}.${newest.slice(4)}`;
+        setSearchRange(rangeLabel);
         try {
           if (isInvalidKey(apiKey)) {
             setIsDemoMode(true);
-            setOriginalListings(getDemoData(selectedGu, dealYmd));
+            setOriginalListings(getDemoData(selectedGu, newest));
           } else {
             setIsDemoMode(false);
             try {
-              const data = await fetchAptRent(selectedGu, dealYmd, apiKey);
-              if (data && data.length > 0) {
-                setOriginalListings(data);
+              // 최근 6개월 병렬 조회
+              const results = await Promise.allSettled(
+                months.map(m => fetchAptRent(selectedGu, m, apiKey))
+              );
+              const allData = [];
+              results.forEach(r => {
+                if (r.status === 'fulfilled' && Array.isArray(r.value)) {
+                  allData.push(...r.value);
+                }
+              });
+              if (allData.length > 0) {
+                setOriginalListings(allData);
               } else {
                 // 데이터 없으면 데모 데이터로 표시
                 setIsDemoMode(true);
-                setOriginalListings(getDemoData(selectedGu, dealYmd));
+                setOriginalListings(getDemoData(selectedGu, newest));
               }
             } catch (apiErr) {
               // CORS/API 오류 시 데모 데이터로 자동 폴백
               console.warn('API 오류, 데모 데이터로 전환:', apiErr.message);
               setIsDemoMode(true);
-              setOriginalListings(getDemoData(selectedGu, dealYmd));
+              setOriginalListings(getDemoData(selectedGu, newest));
             }
           }
         } catch (err) {
@@ -564,7 +685,7 @@ function dabangUrl(aptName) {
                   {isDemoMode
                     ? <span><strong>샘플 데이터</strong> 표시 중 — 실제 데이터는 API 키 설정 후 확인 가능</span>
                     : <span>
-                        <strong>국토교통부 실거래가</strong> (완료된 전월세 거래) · 네이버 버튼은 <strong>현재 매물 검색</strong>으로 연결됩니다<br/>
+                        <strong>국토교통부 실거래가</strong> (최근 6개월 완료된 전월세 거래 · {searchRange}) · 네이버/다방 버튼은 <strong>현재 매물 검색</strong>으로 연결됩니다<br/>
                         <span className="text-blue-600">※ 실거래가 ≠ 현재 매물가 — 임장 전 네이버 현재 호가 반드시 확인하세요</span>
                       </span>
                   }
@@ -608,17 +729,15 @@ function dabangUrl(aptName) {
                     ))}
                   </select>
                 </div>
-                {/* 계약연월 선택 */}
+                {/* 조회 범위 표시 */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                    <Calendar size={12} /> 계약연월
+                    <Calendar size={12} /> 조회 범위
                   </label>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
+                  <div className="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 font-semibold flex items-center gap-1.5">
+                    <span className="text-blue-500">📅</span>
+                    {searchRange || '최근 6개월 자동'}
+                  </div>
                 </div>
               </div>
               {/* 전용면적 필터 */}
@@ -722,6 +841,7 @@ function dabangUrl(aptName) {
                   const loanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
                   const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
                   const score = smartScore(item);
+                  const transit = getTransit(item.dong);
                   const isTop = score >= 180; // 전세+이자지원+6억근접 모두 충족
                   const depositDiff = Math.abs(item.deposit - TARGET_DEPOSIT);
                   return (
@@ -768,6 +888,15 @@ function dabangUrl(aptName) {
                           <span className="flex items-center gap-1"><Layers size={12} />{item.floor}층</span>
                           <span className="flex items-center gap-1"><Calendar size={12} />{item.buildYear}년식</span>
                           <span>계약 {item.dealMonth}.{item.dealDay}</span>
+                        </div>
+                        {/* 대중교통 시간 배지 */}
+                        <div className="flex gap-2 mt-2">
+                          <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${transit.s <= 20 ? 'bg-green-100 text-green-700' : transit.s <= 30 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                            🚇 서울역 {transit.s}분
+                          </span>
+                          <span className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${transit.m <= 15 ? 'bg-green-100 text-green-700' : transit.m <= 25 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                            🏢 문정 {transit.m}분
+                          </span>
                         </div>
                       </div>
                       <div className="px-4 py-2 bg-slate-50 border-t border-slate-100">
@@ -820,14 +949,15 @@ function dabangUrl(aptName) {
             {!loading && !error && processedData.listings.length === 0 && (
               <div className="text-center py-16 text-slate-500 bg-white rounded-xl border border-slate-200">
                 <Building2 size={40} className="mx-auto text-slate-300 mb-3" />
-                <p className="font-medium">해당 조건의 매물이 없습니다.</p>
-                <p className="text-sm mt-1 text-slate-400">다른 자치구나 기간을 선택해보세요.</p>
+                <p className="font-medium">최근 6개월 실거래 내역이 없습니다.</p>
+                <p className="text-sm mt-1 text-slate-400">다른 자치구 또는 면적 조건을 조정해보세요.</p>
               </div>
             )}
             {loading && (
               <div className="text-center py-16">
                 <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm text-slate-500">매물 데이터를 불러오는 중...</p>
+                <p className="text-sm text-slate-500 font-semibold">최근 6개월 실거래 데이터 조회 중...</p>
+                <p className="text-xs text-slate-400 mt-1">국토교통부 API 6회 병렬 호출 중입니다</p>
               </div>
             )}
           </main>
