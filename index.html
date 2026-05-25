@@ -1,896 +1,484 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-<title>신혼집 탐색기 🏠</title>
-<style>
-:root{
-  --bg:#f8f9fa;--card:#fff;--border:#e2e8f0;--txt:#1a202c;--sub:#64748b;
-  --accent:#3b82f6;--accent2:#10b981;--warn:#f59e0b;--danger:#ef4444;
-  --gtx:#7c3aed;--radius:12px;--shadow:0 2px 8px rgba(0,0,0,.08);
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:var(--bg);color:var(--txt);max-width:480px;margin:0 auto;min-height:100vh;}
-#hdr{background:#fff;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
-#hdr h1{font-size:1.1rem;font-weight:700;}
-.gtx-wrap{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--gtx);}
-.toggle-track{width:40px;height:22px;background:#ddd;border-radius:11px;position:relative;cursor:pointer;transition:.3s;}
-.toggle-track.on{background:var(--gtx);}
-.toggle-thumb{position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.3s;}
-.toggle-track.on .toggle-thumb{left:20px;}
-#tabs{display:grid;grid-template-columns:repeat(7,1fr);background:#fff;border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:99;}
-.tab{padding:8px 2px;text-align:center;font-size:.63rem;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;}
-.tab.on{color:var(--accent);border-color:var(--accent);font-weight:600;}
-.tab .ti{font-size:1rem;display:block;}
-.pg{display:none;padding:12px 12px 80px;}
-.pg.on{display:block;}
-.sb{display:flex;gap:6px;margin-bottom:10px;}
-.sb input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;outline:none;}
-.sb input:focus{border-color:var(--accent);}
-.sb button{padding:9px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;}
-.qf{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.qf button{padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:20px;font-size:.75rem;cursor:pointer;}
-.frow{display:flex;gap:6px;margin-bottom:10px;align-items:center;}
-.frow select{flex:1;padding:7px;border:1px solid var(--border);border-radius:8px;font-size:.78rem;background:#fff;}
-.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
-.stat-box{background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid var(--border);}
-.stat-box .sv{font-size:1.1rem;font-weight:700;color:var(--accent);}
-.stat-box .sk{font-size:.7rem;color:var(--sub);}
-.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;padding:14px;cursor:pointer;border:1px solid var(--border);transition:.2s;}
-.card:hover{border-color:var(--accent);}
-.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
-.card-name{font-size:.95rem;font-weight:700;}
-.card-price{font-size:1rem;font-weight:700;color:var(--accent);}
-.tag{padding:2px 8px;border-radius:20px;font-size:.7rem;background:#eff6ff;color:var(--accent);display:inline-block;}
-.tag.gtx{background:#f5f3ff;color:var(--gtx);}
-.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
-.fav-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;padding:2px;}
-.bbar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:3px;}
-.bbar-fill{height:100%;border-radius:4px;transition:.5s;}
-#mo{position:fixed;inset:0;z-index:200;display:none;}
-#mo.open{display:flex;flex-direction:column;justify-content:flex-end;}
-#mo-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);}
-#mo-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px;max-height:85vh;overflow-y:auto;position:relative;z-index:1;}
-.mo-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:.85rem;}
-.mo-row .mk{color:var(--sub);}
-.mo-row .mv{font-weight:600;}
-.mo-sect{font-size:.8rem;font-weight:700;color:var(--sub);margin:12px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px;}
-.mo-memo{width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;resize:vertical;min-height:70px;font-family:inherit;}
-.mo-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;margin-top:8px;}
-.comm-item{text-align:center;}
-.comm-min{font-size:1.4rem;font-weight:700;color:var(--accent);}
-.comm-min.gtx{color:var(--gtx);}
-.comm-orig{font-size:.75rem;color:var(--sub);text-decoration:line-through;}
-.comm-label{font-size:.7rem;color:var(--sub);}
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:8px 18px;border-radius:20px;font-size:.85rem;opacity:0;transition:.3s;pointer-events:none;z-index:300;white-space:nowrap;}
-#toast.show{opacity:1;}
-.sec-title{font-size:.85rem;font-weight:700;color:var(--sub);margin-bottom:8px;}
-.f-row{margin-bottom:10px;}
-.f-row label{font-size:.78rem;color:var(--sub);display:block;margin-bottom:4px;}
-.f-row input,.f-row select{width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;}
-.f-row input:focus{outline:none;border-color:var(--accent);}
-.f-btn{width:100%;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:.9rem;margin-bottom:8px;}
-.f-btn.pri{background:var(--accent);color:#fff;}
-.f-btn.sec{background:#f1f5f9;color:var(--txt);}
-.f-btn.danger{background:var(--danger);color:#fff;}
-.loan-result{background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius);padding:14px;margin-top:10px;}
-.loan-result .lr-main{font-size:1.3rem;font-weight:700;color:var(--accent);}
-.loan-result .lr-sub{font-size:.8rem;color:var(--sub);margin-top:4px;}
-.loan-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
-.loan-box{background:#fff;border-radius:8px;padding:10px;border:1px solid var(--border);}
-.loan-box .lv{font-size:1rem;font-weight:700;}
-.loan-box .lk{font-size:.7rem;color:var(--sub);}
-.sched-item{background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.sched-dday{min-width:50px;text-align:center;font-size:.75rem;font-weight:700;color:var(--accent);}
-.sched-info{flex:1;}
-.sched-title{font-size:.9rem;font-weight:600;}
-.sched-date{font-size:.75rem;color:var(--sub);}
-.sched-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;}
-.favs-empty{text-align:center;padding:40px;color:var(--sub);}
-.fav-compare{background:#fff;border-radius:var(--radius);overflow-x:auto;margin-bottom:12px;border:1px solid var(--border);}
-.fav-compare table{width:100%;border-collapse:collapse;font-size:.78rem;}
-.fav-compare th{background:#f8fafc;padding:8px;text-align:left;color:var(--sub);font-weight:600;}
-.fav-compare td{padding:8px;border-top:1px solid var(--border);}
-.rts-code-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-.rts-code-btns button{padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:20px;font-size:.75rem;cursor:pointer;}
-.rts-code-btns button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-.rts-item{background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;border:1px solid var(--border);}
-.rts-item .ri-name{font-size:.9rem;font-weight:600;}
-.rts-item .ri-price{font-size:1rem;font-weight:700;color:var(--accent);}
-.rts-item .ri-meta{font-size:.73rem;color:var(--sub);margin-top:2px;}
-.rts-state{text-align:center;padding:30px;color:var(--sub);}
-#map-wrap{height:350px;border-radius:var(--radius);overflow:hidden;background:#e2e8f0;display:flex;align-items:center;justify-content:center;color:var(--sub);font-size:.9rem;text-align:center;}
-#map{width:100%;height:100%;}
-#fb-status-box{margin-top:8px;padding:8px 12px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;display:none;}
-#fb-status-text{font-size:.8rem;color:var(--accent2);}
-.gtx-badge{background:#f5f3ff;color:var(--gtx);border-radius:8px;padding:8px 12px;font-size:.8rem;margin-bottom:10px;border:1px solid #ddd6fe;}
-.rts-filters{display:flex;gap:6px;margin-bottom:10px;}
-.rts-filters input{flex:1;padding:7px;border:1px solid var(--border);border-radius:8px;font-size:.8rem;}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유해인 포트폴리오 - 스마트 실거래가</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* 기본 폰트 설정 (웹 폰트 적용) */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body { font-family: 'Pretendard', sans-serif; }
+
+    /* 로딩 스피너 애니메이션 추가 */
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .animate-spin { animation: spin 1s linear infinite; }
+  </style>
 </head>
 <body>
-
-<div id="hdr">
-  <h1>🏠 신혼집 탐색기</h1>
-  <div class="gtx-wrap">
-    <span style="font-size:.7rem">GTX-A</span>
-    <div class="toggle-track" id="gtx-track" onclick="toggleGTX()">
-      <div class="toggle-thumb" id="gtx-thumb"></div>
-    </div>
-    <span id="gtx-lbl">OFF</span>
-  </div>
-</div>
-
-<div id="tabs">
-  <div class="tab on" onclick="showPg('pg-search')"><span class="ti">🔍</span>탐색</div>
-  <div class="tab" onclick="showPg('pg-favs')"><span class="ti">⭐</span>즐겨찾기<span id="fav-cnt-tab"></span></div>
-  <div class="tab" onclick="showPg('pg-rts')"><span class="ti">📊</span>실거래</div>
-  <div class="tab" onclick="showPg('pg-map')"><span class="ti">🗺️</span>지도</div>
-  <div class="tab" onclick="showPg('pg-sched')"><span class="ti">📅</span>일정</div>
-  <div class="tab" onclick="showPg('pg-settings')"><span class="ti">⚙️</span>설정</div>
-  <div class="tab" onclick="showPg('pg-loan')"><span class="ti">💰</span>대출</div>
-</div>
-
-<!-- 매물탐색 -->
-<div class="pg on" id="pg-search">
-  <div class="sb">
-    <input id="fkw" type="text" placeholder="아파트명, 지역 검색..." oninput="applyF()">
-    <button onclick="applyF()">검색</button>
-  </div>
-  <div class="qf">
-    <button onclick="qf('전세')">전세</button>
-    <button onclick="qf('월세')">월세</button>
-    <button onclick="qf('GTX')">GTX-A</button>
-    <button onclick="qf('역세권')">역세권</button>
-    <button onclick="qf('신축')">신축</button>
-    <button onclick="qf('')">전체</button>
-  </div>
-  <div class="frow">
-    <select id="fsort" onchange="applyF()">
-      <option value="def">기본정렬</option>
-      <option value="dep_asc">보증금낮은순</option>
-      <option value="dep_desc">보증금높은순</option>
-      <option value="area">면적큰순</option>
-      <option value="year">신축순</option>
-      <option value="com">통근짧은순</option>
-    </select>
-    <select id="ftype" onchange="applyF()">
-      <option value="">전월세전체</option>
-      <option value="전세">전세</option>
-      <option value="월세">월세</option>
-    </select>
-    <select id="fmax" onchange="applyF()">
-      <option value="0">예산전체</option>
-      <option value="3">3억↓</option>
-      <option value="4">4억↓</option>
-      <option value="5">5억↓</option>
-      <option value="6">6억↓</option>
-    </select>
-  </div>
-  <div class="gtx-badge" id="gtx-badge" style="display:none">⚡ GTX-A 2027년 개통 기준 통근 시간으로 보정 중</div>
-  <div class="stat-row" id="stat-row">
-    <div class="stat-box"><div class="sv" id="s-cnt">0</div><div class="sk">매물수</div></div>
-    <div class="stat-box"><div class="sv" id="s-avg">-</div><div class="sk">평균보증금</div></div>
-    <div class="stat-box"><div class="sv" id="s-comm">-</div><div class="sk">평균통근</div></div>
-  </div>
-  <div id="card-list"></div>
-</div>
-
-<!-- 즐겨찾기 -->
-<div class="pg" id="pg-favs">
-  <div id="favs-wrap"></div>
-</div>
-
-<!-- 실거래가 -->
-<div class="pg" id="pg-rts">
-  <div class="sec-title">지역 선택</div>
-  <div class="rts-code-btns" id="rts-btns">
-    <button onclick="setRtsCode('11380','은평구','202604')" class="on">은평구</button>
-    <button onclick="setRtsCode('11440','마포구','202604')">마포구</button>
-    <button onclick="setRtsCode('11710','송파구','202604')">송파구</button>
-    <button onclick="setRtsCode('11170','용산구','202604')">용산구</button>
-    <button onclick="setRtsCode('11200','성동구','202604')">성동구</button>
-    <button onclick="setRtsCode('11650','서초구','202604')">서초구</button>
-    <button onclick="setRtsCode('11680','강남구','202604')">강남구</button>
-  </div>
-  <div class="rts-filters">
-    <input id="rts-lawdcd" placeholder="법정동코드(5자리)" value="11380">
-    <input id="rts-ym" placeholder="연월(202604)" value="202604">
-    <input id="rts-apt" placeholder="아파트명(선택)">
-  </div>
-  <button class="f-btn pri" id="rts-btn" onclick="fetchRTS()" style="margin-top:2px">조회하기</button>
-  <div id="rts-result"></div>
-</div>
-
-<!-- 지도 -->
-<div class="pg" id="pg-map">
-  <div id="map-wrap">
-    <div id="map-placeholder">📍 설정 탭에서<br>카카오맵 API 키를<br>입력하면 지도가 표시됩니다</div>
-    <div id="map" style="display:none;width:100%;height:100%"></div>
-  </div>
-  <div style="margin-top:10px;font-size:.8rem;color:var(--sub)">카카오 개발자 콘솔에서 JavaScript 앱 키를 발급 받아 설정 탭에 입력하세요.</div>
-</div>
-
-<!-- 일정 -->
-<div class="pg" id="pg-sched">
-  <div class="sec-title">일정 추가</div>
-  <div class="f-row"><label>일정 제목</label><input id="sc-title" placeholder="예: 은평뉴타운 임장"></div>
-  <div class="f-row"><label>날짜</label><input id="sc-date" type="date"></div>
-  <div class="f-row"><label>메모</label><input id="sc-memo" placeholder="메모 입력"></div>
-  <button class="f-btn pri" onclick="addSched()">일정 추가</button>
-  <div class="sec-title" style="margin-top:16px">📅 예정 일정</div>
-  <div id="sched-list"></div>
-</div>
-
-<!-- 설정 -->
-<div class="pg" id="pg-settings">
-  <div class="sec-title">🔑 API 키 설정</div>
-  <div class="f-row">
-    <label>카카오맵 API 키 (JavaScript 키)</label>
-    <input id="s-kakao" type="password" placeholder="카카오 개발자 콘솔에서 발급">
-  </div>
-  <div class="f-row">
-    <label>공공데이터 API 키 (국토부 실거래가)</label>
-    <input id="s-molit" type="password" placeholder="data.go.kr 에서 발급">
-  </div>
-  <button class="f-btn pri" onclick="saveSettings()">API 키 저장</button>
-
-  <div class="sec-title" style="margin-top:20px">🔥 Firebase 실시간 동기화</div>
-  <p style="font-size:.78rem;color:var(--sub);margin-bottom:10px">Firebase Realtime DB URL과 동기화 ID를 입력하면 여러 기기에서 즐겨찾기·메모가 실시간 공유됩니다.</p>
-  <div class="f-row">
-    <label>Firebase Database URL</label>
-    <input id="s-fb-url" placeholder="https://xxx-default-rtdb.firebaseio.com">
-  </div>
-  <div class="f-row">
-    <label>동기화 ID (기기 공유 키)</label>
-    <input id="s-fb-id" placeholder="예: sinhonjip2025">
-  </div>
-  <button class="f-btn pri" onclick="initFirebase()">Firebase 연결</button>
-  <button class="f-btn sec" onclick="disconnectFirebase()">연결 해제</button>
-  <div id="fb-status-box"><span id="fb-status-text">✅ 연결됨</span></div>
-
-  <div class="sec-title" style="margin-top:20px">ℹ️ 앱 정보</div>
-  <div style="font-size:.8rem;color:var(--sub);line-height:1.8">
-    <div>최대 예산: 6억 (자체 3억 + 서울시 대출 3억)</div>
-    <div>실부담 금리: COFIX 3.5% + 1.45% − 서울지원 2.0% = <strong>2.95%</strong></div>
-    <div>GTX-A: 연신내↔서울역 2027년 개통 예정</div>
-    <div>버전: v3.0 (2026.05.25)</div>
-  </div>
-</div>
-
-<!-- 대출계산기 -->
-<div class="pg" id="pg-loan">
-  <div class="sec-title">💰 서울시 신혼부부 대출 계산기</div>
-  <div class="f-row"><label>주택 가격 (만원)</label><input id="l-price" type="number" value="50000" oninput="calcL()"></div>
-  <div class="f-row"><label>자체 보유 자금 (만원)</label><input id="l-self" type="number" value="30000" oninput="calcL()"></div>
-  <div class="f-row"><label>대출 기간</label>
-    <select id="l-years" onchange="calcL()">
-      <option value="10">10년</option>
-      <option value="20" selected>20년</option>
-      <option value="30">30년</option>
-    </select>
-  </div>
-  <div class="f-row"><label>상환 방식</label>
-    <select id="l-type" onchange="calcL()">
-      <option value="equal">원리금균등</option>
-      <option value="principal">원금균등</option>
-    </select>
-  </div>
-  <div id="loan-result"></div>
-</div>
-
-<!-- Modal -->
-<div id="mo">
-  <div id="mo-bg" onclick="closeMo()"></div>
-  <div id="mo-sheet"><div id="mo-content"></div></div>
-</div>
-
-<!-- Toast -->
-<div id="toast"></div>
-
-<script>
-// ── Constants ──────────────────────────────
-const TOTAL_BUDGET   = 600000000;
-const MAX_LOAN_LIMIT = 300000000;
-const BORROWER_RATE  = 0.0295;
-
-// ── Data ───────────────────────────────────
-const PROPS = [
-  {id:1,name:'은평뉴타운 힐스테이트',addr:'서울 은평구 진관동',area:84,deposit:52000,rent:0,type:'전세',units:1234,year:2011,ca:35,caGtx:20,cb:50,tags:['GTX-A','역세권','신축'],desc:'GTX-A 연신내역 도보 5분. 2027년 서울역 20분.',fav:false,memo:''},
-  {id:2,name:'진관 e편한세상',addr:'서울 은평구 진관동',area:74,deposit:45000,rent:0,type:'전세',units:876,year:2013,ca:32,caGtx:18,cb:45,tags:['GTX-A','공원뷰'],desc:'자연환경 우수. GTX-A 연신내 버스 8분.',fav:false,memo:''},
-  {id:3,name:'구산역 래미안',addr:'서울 은평구 구산동',area:59,deposit:38000,rent:0,type:'전세',units:543,year:2007,ca:38,caGtx:null,cb:55,tags:['6호선','역세권'],desc:'구산역 도보 3분. 마포·용산 환승 편리.',fav:false,memo:''},
-  {id:4,name:'구파발 9단지 래미안',addr:'서울 은평구 진관동',area:59,deposit:35000,rent:0,type:'전세',units:1068,year:2008,ca:28,caGtx:15,cb:65,tags:['GTX-A★','대단지'],desc:'GTX-A 2027년 개통 후 서울역 15분.',fav:true,memo:'층수 확인 필요'},
-  {id:5,name:'꿈에그린 (한화)',addr:'서울 은평구 응암동',area:64,deposit:40000,rent:0,type:'전세',units:756,year:2010,ca:30,caGtx:18,cb:48,tags:['GTX-A','공원뷰'],desc:'응암역 도보 5분. GTX-A 연신내 환승.',fav:false,memo:''},
-  {id:6,name:'박석고개 힐스테이트',addr:'서울 은평구 불광동',area:76,deposit:48000,rent:0,type:'전세',units:895,year:2015,ca:32,caGtx:20,cb:42,tags:['GTX-A','학세권'],desc:'불광역 인근. 초중고 도보권.',fav:false,memo:''},
-  {id:7,name:'DMC 한양수자인',addr:'서울 마포구 상암동',area:84,deposit:55000,rent:0,type:'전세',units:1450,year:2012,ca:25,caGtx:null,cb:35,tags:['DMC','역세권','대단지'],desc:'DMC역 도보 5분. 상암IT단지 직결.',fav:false,memo:''},
-  {id:8,name:'수색 증산 센트럴',addr:'서울 은평구 수색동',area:59,deposit:32000,rent:30,type:'월세',units:234,year:2018,ca:28,caGtx:null,cb:40,tags:['신축','경의중앙선'],desc:'수색역 도보 3분. 경의중앙선·공항철도.',fav:false,memo:''},
-  {id:9,name:'녹번역 e편한세상',addr:'서울 은평구 녹번동',area:74,deposit:43000,rent:0,type:'전세',units:678,year:2016,ca:22,caGtx:null,cb:38,tags:['3호선','역세권','신축'],desc:'녹번역 도보 5분. 3호선 직결.',fav:false,memo:''},
-  {id:10,name:'상암 DMC 래미안',addr:'서울 마포구 상암동',area:84,deposit:58000,rent:0,type:'전세',units:1200,year:2009,ca:25,caGtx:null,cb:35,tags:['DMC','대단지','한강뷰'],desc:'디지털미디어시티역 도보 7분. 한강조망.',fav:false,memo:''},
-];
-
-// ── State ──────────────────────────────────
-let gtxActive = false;
-let filtered = [...PROPS];
-let schedules = JSON.parse(localStorage.getItem('schedules')||'[]');
-let fbDb = null, fbPath = '', fbListener = null;
-let mapInited = false;
-
-// ── Utils ──────────────────────────────────
-function toast(msg, dur){
-  dur=dur||2200;
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},dur);
-}
-
-function fmt(v){
-  if(!v) return '-';
-  if(v>=10000) return (v/10000).toFixed(1)+'억';
-  return v.toLocaleString()+'만';
-}
-
-function fmtWon(v){
-  if(v>=100000000) return (v/100000000).toFixed(2)+'억원';
-  if(v>=10000) return Math.round(v/10000).toLocaleString()+'만원';
-  return Math.round(v).toLocaleString()+'원';
-}
-
-function getCA(p){ return gtxActive && p.caGtx ? p.caGtx : p.ca; }
-
-// ── Navigation ─────────────────────────────
-function showPg(id){
-  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
-  document.querySelectorAll('#tabs .tab').forEach(function(t){t.classList.remove('on');});
-  document.getElementById(id).classList.add('on');
-  var map={'pg-search':0,'pg-favs':1,'pg-rts':2,'pg-map':3,'pg-sched':4,'pg-settings':5,'pg-loan':6};
-  var idx=map[id];
-  if(idx!==undefined) document.querySelectorAll('#tabs .tab')[idx].classList.add('on');
-  if(id==='pg-favs') renderFavs();
-  if(id==='pg-sched'){ renderSched(); }
-  if(id==='pg-loan') calcL();
-  if(id==='pg-map') initMap();
-}
-
-// ── GTX Toggle ─────────────────────────────
-function toggleGTX(){
-  gtxActive=!gtxActive;
-  var track=document.getElementById('gtx-track');
-  var lbl=document.getElementById('gtx-lbl');
-  var badge=document.getElementById('gtx-badge');
-  if(gtxActive){
-    track.classList.add('on'); lbl.textContent='ON'; lbl.style.color='var(--gtx)';
-    if(badge) badge.style.display='block';
-  } else {
-    track.classList.remove('on'); lbl.textContent='OFF'; lbl.style.color='';
-    if(badge) badge.style.display='none';
-  }
-  applyF();
-  if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
-}
-
-// ── Filter / Sort ──────────────────────────
-function qf(s){
-  document.getElementById('fkw').value=s;
-  applyF();
-}
-
-function applyF(){
-  var kw=(document.getElementById('fkw').value||'').toLowerCase();
-  var sort=document.getElementById('fsort').value;
-  var type=document.getElementById('ftype').value;
-  var maxV=parseInt(document.getElementById('fmax').value)||0;
-
-  filtered=PROPS.filter(function(p){
-    if(type && p.type!==type) return false;
-    if(maxV && p.deposit>maxV*10000) return false;
-    if(kw){
-      var hay=(p.name+p.addr+p.tags.join()+p.desc).toLowerCase();
-      if(!hay.includes(kw)) return false;
-    }
-    return true;
-  });
-
-  filtered.sort(function(a,b){
-    if(sort==='dep_asc') return a.deposit-b.deposit;
-    if(sort==='dep_desc') return b.deposit-a.deposit;
-    if(sort==='area') return b.area-a.area;
-    if(sort==='year') return b.year-a.year;
-    if(sort==='com') return (getCA(a)+a.cb)-(getCA(b)+b.cb);
-    return 0;
-  });
-
-  renderCards();
-  updateStats();
-}
-
-function updateStats(){
-  document.getElementById('s-cnt').textContent=filtered.length;
-  if(!filtered.length){
-    document.getElementById('s-avg').textContent='-';
-    document.getElementById('s-comm').textContent='-';
-    return;
-  }
-  var avgDep=Math.round(filtered.reduce(function(a,p){return a+p.deposit;},0)/filtered.length);
-  var avgComm=Math.round(filtered.reduce(function(a,p){return a+getCA(p)+p.cb;},0)/filtered.length);
-  document.getElementById('s-avg').textContent=fmt(avgDep);
-  document.getElementById('s-comm').textContent=avgComm+'분';
-}
-
-// ── Cards ──────────────────────────────────
-function renderCards(){
-  var el=document.getElementById('card-list');
-  if(!filtered.length){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--sub)">검색 결과가 없습니다</div>';
-    return;
-  }
-  var budget=TOTAL_BUDGET/10000;
-  el.innerHTML=filtered.map(function(p){
-    var ca=getCA(p);
-    var total=ca+p.cb;
-    var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
-    var pct=Math.min(100,Math.round(p.deposit/budget*100));
-    var bc=pct>90?'var(--danger)':pct>70?'var(--warn)':'var(--accent2)';
-    var favIcon=p.fav?'⭐':'☆';
-    var priceStr=p.type==='월세'?('보'+fmt(p.deposit)+'/월'+fmt(p.rent)):('전세 '+fmt(p.deposit));
-    var commHtml=hasGtx?('<s style="opacity:.5">'+p.ca+'</s> <span style="color:var(--gtx);font-weight:700">'+p.caGtx+'</span>'):ca;
-    return '<div class="card" onclick="openMo('+p.id+')">'
-      +'<div class="card-head">'
-      +'<div class="card-name">'+p.name+'</div>'
-      +'<button class="fav-btn" onclick="event.stopPropagation();toggleFav('+p.id+')">'+favIcon+'</button>'
-      +'</div>'
-      +'<div class="card-head" style="margin-bottom:8px">'
-      +'<div class="card-price">'+priceStr+'</div>'
-      +'<div style="font-size:.75rem;color:var(--sub)">'+p.area+'㎡ · '+p.year+'년</div>'
-      +'</div>'
-      +'<div style="margin-bottom:8px"><div style="font-size:.72rem;color:var(--sub);margin-bottom:3px">예산 대비 '+pct+'%</div>'
-      +'<div class="bbar"><div class="bbar-fill" style="width:'+pct+'%;background:'+bc+'"></div></div></div>'
-      +'<div class="card-tags">'+p.tags.map(function(t){return '<span class="tag'+(t.includes('GTX')?' gtx':'')+'">'+t+'</span>';}).join('')+'</div>'
-      +'<div style="font-size:.78rem;color:var(--sub);margin-top:6px;display:flex;gap:8px">'
-      +'<span>🏢A: '+commHtml+'분</span><span>🏢B: '+p.cb+'분</span><span>합: '+total+'분</span>'
-      +'</div>'
-      +(p.memo?'<div style="font-size:.73rem;color:var(--accent2);margin-top:4px">📝 '+p.memo+'</div>':'')
-      +'</div>';
-  }).join('');
-}
-
-// ── Favorites ──────────────────────────────
-function toggleFav(id){
-  var p=PROPS.find(function(x){return x.id===id;});
-  if(!p) return;
-  p.fav=!p.fav;
-  toast(p.fav?'⭐ '+p.name+' 즐겨찾기 추가':'☆ 즐겨찾기 해제');
-  updateFavTabCount();
-  applyF();
-  if(fbDb) syncFavsToFirebase();
-}
-
-function updateFavTabCount(){
-  var n=PROPS.filter(function(p){return p.fav;}).length;
-  document.getElementById('fav-cnt-tab').textContent=n?' ('+n+')':'';
-}
-
-function renderFavs(){
-  var favs=PROPS.filter(function(p){return p.fav;});
-  var el=document.getElementById('favs-wrap');
-  if(!favs.length){
-    el.innerHTML='<div class="favs-empty"><div style="font-size:3rem">⭐</div><div>즐겨찾기한 매물이 없습니다</div><div style="font-size:.8rem;margin-top:8px">탐색 탭에서 ⭐ 버튼을 눌러 추가하세요</div></div>';
-    return;
-  }
-  var avgDep=Math.round(favs.reduce(function(a,p){return a+p.deposit;},0)/favs.length);
-  var avgCom=Math.round(favs.reduce(function(a,p){return a+getCA(p)+p.cb;},0)/favs.length);
-  var statsHtml='<div class="stat-row">'
-    +'<div class="stat-box"><div class="sv">'+favs.length+'</div><div class="sk">즐겨찾기</div></div>'
-    +'<div class="stat-box"><div class="sv">'+fmt(avgDep)+'</div><div class="sk">평균보증금</div></div>'
-    +'<div class="stat-box"><div class="sv">'+avgCom+'분</div><div class="sk">평균통근</div></div>'
-    +'</div>';
-  var tableHtml='<div class="fav-compare"><table>'
-    +'<tr><th>이름</th><th>보증금</th><th>면적</th><th>통근합</th><th>-</th></tr>'
-    +favs.map(function(p){return '<tr><td style="font-weight:600">'+p.name.substring(0,7)+'</td>'
-      +'<td>'+fmt(p.deposit)+'</td><td>'+p.area+'㎡</td>'
-      +'<td>'+(getCA(p)+p.cb)+'분</td>'
-      +'<td><button onclick="toggleFav('+p.id+')" style="background:none;border:none;cursor:pointer;color:var(--danger)">✕</button></td></tr>';
-    }).join('')
-    +'</table></div>';
-  var cardsHtml=favs.map(function(p){
-    var ca=getCA(p);
-    var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
-    var commHtml=hasGtx?('<s style="opacity:.5">'+p.ca+'</s><span style="color:var(--gtx);font-weight:700"> '+p.caGtx+'</span>'):ca;
-    return '<div class="card" onclick="openMo('+p.id+')">'
-      +'<div class="card-head"><div class="card-name">'+p.name+'</div>'
-      +'<button class="fav-btn" onclick="event.stopPropagation();toggleFav('+p.id+')">⭐</button></div>'
-      +'<div style="font-size:.95rem;font-weight:700;color:var(--accent);margin-bottom:6px">'+fmt(p.deposit)+' '+p.type+'</div>'
-      +'<div style="font-size:.78rem;color:var(--sub);display:flex;gap:8px">'
-      +'<span>🏢A: '+commHtml+'분</span><span>🏢B: '+p.cb+'분</span><span>합: '+(ca+p.cb)+'분</span></div>'
-      +(p.memo?'<div style="font-size:.78rem;color:var(--accent2);margin-top:6px">📝 '+p.memo+'</div>':'')
-      +'</div>';
-  }).join('');
-  el.innerHTML=statsHtml+tableHtml+cardsHtml;
-}
-
-// ── Modal ──────────────────────────────────
-function openMo(id){
-  var p=PROPS.find(function(x){return x.id===id;});
-  if(!p) return;
-  var ca=getCA(p);
-  var total=ca+p.cb;
-  var hasGtx=gtxActive&&p.caGtx&&p.caGtx<p.ca;
-  var budget=TOTAL_BUDGET/10000;
-  var pct=Math.min(100,Math.round(p.deposit/budget*100));
-  var remain=budget-p.deposit;
-  var priceStr=p.type==='월세'?('보'+fmt(p.deposit)+'/월'+fmt(p.rent)):('전세 '+fmt(p.deposit));
-  var commA=hasGtx?('<s>'+p.ca+'</s><span style="color:var(--gtx);font-weight:700"> '+p.caGtx+'</span>'):ca;
-  document.getElementById('mo-content').innerHTML=
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
-    +'<div style="font-size:1.1rem;font-weight:700">'+p.name+'</div>'
-    +'<button onclick="closeMo()" style="background:none;border:none;font-size:1.3rem;cursor:pointer">✕</button></div>'
-    +'<div class="mo-sect">📍 기본 정보</div>'
-    +'<div class="mo-row"><span class="mk">주소</span><span class="mv">'+p.addr+'</span></div>'
-    +'<div class="mo-row"><span class="mk">유형</span><span class="mv">'+p.type+'</span></div>'
-    +'<div class="mo-row"><span class="mk">가격</span><span class="mv" style="color:var(--accent)">'+priceStr+'</span></div>'
-    +'<div class="mo-row"><span class="mk">면적</span><span class="mv">'+p.area+'㎡ ('+Math.round(p.area/3.3)+'평)</span></div>'
-    +'<div class="mo-row"><span class="mk">세대수</span><span class="mv">'+p.units.toLocaleString()+'세대</span></div>'
-    +'<div class="mo-row"><span class="mk">준공연도</span><span class="mv">'+p.year+'년 ('+( new Date().getFullYear()-p.year)+'년차)</span></div>'
-    +'<div class="mo-sect">💰 예산 분석</div>'
-    +'<div class="mo-row"><span class="mk">총예산</span><span class="mv">6억</span></div>'
-    +'<div class="mo-row"><span class="mk">주택비용</span><span class="mv" style="color:var(--accent)">'+fmt(p.deposit)+'</span></div>'
-    +'<div class="mo-row"><span class="mk">예산 대비</span><span class="mv" style="color:'+(pct>90?'var(--danger)':pct>70?'var(--warn)':'var(--accent2)')+'">'+pct+'%</span></div>'
-    +'<div class="mo-row"><span class="mk">잔여 예산</span><span class="mv">'+fmt(Math.max(0,remain))+(remain<0?' <span style="color:var(--danger)">(초과)</span>':'')+'</span></div>'
-    +'<div class="mo-sect">🚇 통근 분석</div>'
-    +'<div style="display:flex;gap:16px;align-items:center;margin-bottom:8px;flex-wrap:wrap">'
-    +'<div class="comm-item">'+(hasGtx?'<div class="comm-orig">'+p.ca+'분</div><div class="comm-min gtx">'+p.caGtx+'분</div>':'<div class="comm-min">'+ca+'분</div>')+'<div class="comm-label">회사A</div></div>'
-    +'<div style="color:var(--sub)">+</div>'
-    +'<div class="comm-item"><div class="comm-min">'+p.cb+'분</div><div class="comm-label">회사B</div></div>'
-    +'<div style="color:var(--sub)">=</div>'
-    +'<div class="comm-item"><div class="comm-min '+(hasGtx?'gtx':'')+'">'+total+'분</div><div class="comm-label">일일 합계</div></div>'
-    +'</div>'
-    +(hasGtx?'<div style="font-size:.78rem;color:var(--gtx);background:#f5f3ff;padding:6px 10px;border-radius:6px;margin-bottom:8px">⚡ GTX-A 2027 개통 후 '+p.ca+'분→'+p.caGtx+'분 단축</div>':'')
-    +'<div class="mo-sect">🏷️ 태그</div>'
-    +'<div class="card-tags" style="margin-bottom:10px">'+p.tags.map(function(t){return '<span class="tag'+(t.includes('GTX')?' gtx':'')+'">'+t+'</span>';}).join('')+'</div>'
-    +'<div class="mo-sect">📋 설명</div>'
-    +'<div style="font-size:.82rem;color:var(--sub);line-height:1.6;margin-bottom:10px">'+p.desc+'</div>'
-    +'<div class="mo-sect">📝 메모</div>'
-    +'<textarea class="mo-memo" id="mo-memo-'+p.id+'" placeholder="메모를 입력하세요...">'+(p.memo||'')+'</textarea>'
-    +'<button class="mo-btn" onclick="saveMemo('+p.id+')">메모 저장</button>'
-    +'<button class="mo-btn" style="background:'+(p.fav?'var(--warn)':'var(--accent2)')+';margin-top:6px" onclick="toggleFav('+p.id+');closeMo()">'+(p.fav?'⭐ 즐겨찾기 해제':'☆ 즐겨찾기 추가')+'</button>';
-  document.getElementById('mo').classList.add('open');
-}
-
-function closeMo(){
-  document.getElementById('mo').classList.remove('open');
-}
-
-function saveMemo(id){
-  var p=PROPS.find(function(x){return x.id===id;});
-  if(!p) return;
-  var el=document.getElementById('mo-memo-'+id);
-  if(!el) return;
-  p.memo=el.value;
-  toast('📝 메모 저장 완료');
-  applyF();
-  if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
-  if(fbDb) saveMemoToFirebase(id,p.memo);
-}
-
-// ── Real Estate Prices ─────────────────────
-function setRtsCode(code,name,ym){
-  document.getElementById('rts-lawdcd').value=code;
-  document.getElementById('rts-ym').value=ym;
-  document.querySelectorAll('.rts-code-btns button').forEach(function(b){
-    b.classList.toggle('on', b.textContent.trim()===name);
-  });
-}
-
-function showRtsState(state,msg){
-  var el=document.getElementById('rts-result');
-  if(state==='loading') el.innerHTML='<div class="rts-state">⏳ 조회 중...</div>';
-  else if(state==='error') el.innerHTML='<div class="rts-state" style="color:var(--danger)">❌ '+(msg||'오류')+'</div>';
-}
-
-function genSampleData(guName){
-  var apts=['힐스테이트','래미안','e편한세상','자이','푸르지오','더샵'];
-  var areas=[59,74,84,99];
-  return Array.from({length:20},function(_,i){
-    return {
-      aptName:guName+' '+apts[i%apts.length]+' '+(Math.ceil((i+1)/apts.length))+'단지',
-      area:String(areas[i%4]),
-      deposit:String(Math.round((2+Math.random()*4)*10000)),
-      monthlyRent:'0',
-      dealYear:'2026',dealMonth:'04',dealDay:String(Math.ceil(Math.random()*28)),
-      floor:String(Math.ceil(Math.random()*25))
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+    // ==========================================
+    // 0. API 키 설정 영역
+    // ==========================================
+    // 이곳에 공공데이터포털에서 발급받은 API 키(Encoding)를 넣으세요.
+    // 예: "Your_Secret_Api_Key"
+    const DEFAULT_API_KEY = "f754635a661061bda14f6efce95949a04cd8a82a887e474282a76e7404c775ed";
+    // ==========================================
+    // 1. 아이콘 컴포넌트 (Lucide 아이콘 SVG 구현)
+    // ==========================================
+    const IconProps = { fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" };
+    const Zap = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+    const MapPin = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>;
+    const Building2 = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>;
+    const Key = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg>;
+    const AlertCircle = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>;
+    const Home = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+    const Calendar = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>;
+    const Layers = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
+    const CheckCircle2 = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>;
+    const Settings = ({ size=24, className="" }) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" {...IconProps}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>;
+    // ==========================================
+    // 2. 코어 데이터 및 로직
+    // ==========================================
+    const SEOUL_GU = {
+      '강남구': '11680', '강동구': '11740', '강북구': '11305', '강서구': '11500',
+      '관악구': '11620', '광진구': '11215', '구로구': '11530', '금천구': '11545',
+      '노원구': '11350', '도봉구': '11320', '동대문구': '11230', '동작구': '11590',
+      '마포구': '11440', '서대문구': '11410', '서초구': '11650', '성동구': '11200',
+      '성북구': '11290', '송파구': '11710', '양천구': '11470', '영등포구': '11560',
+      '용산구': '11170', '은평구': '11380', '종로구': '11110', '중구': '11140',
+      '중랑구': '11260',
     };
-  });
-}
-
-async function fetchRTS(){
-  var lawdCd=document.getElementById('rts-lawdcd').value.trim();
-  var dealYmd=document.getElementById('rts-ym').value.trim();
-  var aptFilter=document.getElementById('rts-apt').value.trim();
-  if(!lawdCd||!/^\d{5}$/.test(lawdCd)){toast('⚠️ 법정동 코드 5자리 확인');return;}
-  if(!dealYmd||!/^\d{6}$/.test(dealYmd)){toast('⚠️ 연월 6자리 확인 (예: 202604)');return;}
-  showRtsState('loading');
-  document.getElementById('rts-btn').disabled=true;
-  var apiKey=localStorage.getItem('api-molit')||'';
-  var items=[];
-  if(!apiKey){
-    await new Promise(function(r){setTimeout(r,500);});
-    var guNames={'11710':'송파구','11380':'은평구','11440':'마포구','11170':'용산구','11200':'성동구','11650':'서초구','11680':'강남구'};
-    items=genSampleData(guNames[lawdCd]||'서울');
-    toast('ℹ️ 샘플 데이터 표시 (API 키 미설정)');
-  } else {
-    try{
-      var params=new URLSearchParams({lawdCd:lawdCd,dealYmd:dealYmd,numOfRows:500});
-      var res=await fetch('/api/rent?'+params);
-      if(!res.ok){var err=await res.json();throw new Error(err.error||'HTTP '+res.status);}
-      var json=await res.json();
-      items=json.items||[];
-    }catch(e){
-      showRtsState('error',e.message);
-      document.getElementById('rts-btn').disabled=false;
-      return;
+    function isInvalidKey(key) {
+      return !key || key.trim() === '' || key === 'DEMO_KEY' || key === '여기에_발급받은_API_키를_입력하세요';
     }
-  }
-  var results=items.filter(function(item){
-    if(!item.aptName) return false;
-    if(aptFilter&&!item.aptName.includes(aptFilter)) return false;
-    return true;
-  });
-  document.getElementById('rts-btn').disabled=false;
-  renderRTS(results,dealYmd);
-}
+    async function fetchAptRent(lawdCd, dealYmd, apiKey) {
+      if (isInvalidKey(apiKey)) {
+        return getDemoData(lawdCd, dealYmd);
+      }
+      const url = `https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent`
+        + `?serviceKey=${encodeURIComponent(apiKey)}`
+        + `&LAWD_CD=${lawdCd}`
+        + `&DEAL_YMD=${dealYmd}`
+        + `&numOfRows=1000`
+        + `&pageNo=1`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const text = await res.text();
 
-function renderRTS(items,ym){
-  var el=document.getElementById('rts-result');
-  if(!items.length){el.innerHTML='<div class="rts-state">검색 결과가 없습니다</div>';return;}
-  var sorted=[].concat(items).sort(function(a,b){
-    var da=parseFloat(String(a.deposit||0).replace(/,/g,''));
-    var db=parseFloat(String(b.deposit||0).replace(/,/g,''));
-    return db-da;
-  });
-  el.innerHTML='<div style="font-size:.8rem;color:var(--sub);margin-bottom:8px">'+ym.slice(0,4)+'년 '+ym.slice(4)+'월 · 총 '+items.length+'건</div>'
-  +sorted.map(function(item){
-    var dep=parseFloat(String(item.deposit||0).replace(/,/g,''));
-    var mon=parseFloat(String(item.monthlyRent||0).replace(/,/g,''));
-    var priceStr=mon>0?('보'+dep.toLocaleString()+'만/월'+mon.toLocaleString()+'만'):('전세 '+dep.toLocaleString()+'만');
-    var area=parseFloat(item.area||0).toFixed(1);
-    return '<div class="rts-item"><div class="ri-name">'+item.aptName+'</div>'
-      +'<div class="ri-price">'+priceStr+'</div>'
-      +'<div class="ri-meta">'+area+'㎡ · '+(item.floor||'-')+'층 · '+ym.slice(0,4)+'.'+ym.slice(4)+(item.dealDay?'.'+item.dealDay:'')+'</div></div>';
-  }).join('');
-}
+        if (text.includes('<returnAuthMsg>')) {
+          const errMsg = text.match(/<returnAuthMsg>(.*?)<\/returnAuthMsg>/)?.[1] || '인증 오류';
+          throw new Error(`API 키 인증 실패: ${errMsg}`);
+        }
 
-// ── Map ────────────────────────────────────
-function initMap(){
-  if(mapInited) return;
-  var key=localStorage.getItem('api-kakao');
-  if(!key) return;
-  if(window.kakao&&window.kakao.maps){createMap();return;}
-  var s=document.createElement('script');
-  s.src='//dapi.kakao.com/v2/maps/sdk.js?appkey='+key+'&autoload=false';
-  s.onload=function(){kakao.maps.load(function(){createMap();});};
-  s.onerror=function(){toast('❌ 카카오맵 로드 실패');};
-  document.head.appendChild(s);
-}
-
-function createMap(){
-  var el=document.getElementById('map');
-  document.getElementById('map-placeholder').style.display='none';
-  el.style.display='block';
-  var map=new kakao.maps.Map(el,{center:new kakao.maps.LatLng(37.6197,126.9393),level:5});
-  var coords=[[37.628,126.9298],[37.626,126.9278],[37.6131,126.9267],[37.653,126.9191],
-    [37.5983,126.9215],[37.6044,126.9297],[37.5777,126.8976],[37.5815,126.8921],
-    [37.6067,126.9233],[37.5734,126.899]];
-  PROPS.forEach(function(p,i){
-    if(!coords[i]) return;
-    var pos=new kakao.maps.LatLng(coords[i][0],coords[i][1]);
-    var marker=new kakao.maps.Marker({map:map,position:pos});
-    var info=new kakao.maps.InfoWindow({content:'<div style="padding:5px;font-size:.8rem;font-weight:600">'+p.name+'<br>'+fmt(p.deposit)+'</div>'});
-    kakao.maps.event.addListener(marker,'click',function(){info.open(map,marker);});
-  });
-  mapInited=true;
-}
-
-// ── Schedule ───────────────────────────────
-function renderSched(){
-  var el=document.getElementById('sched-list');
-  if(!schedules.length){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--sub)">등록된 일정이 없습니다</div>';
-    return;
-  }
-  var today=new Date(); today.setHours(0,0,0,0);
-  var sorted=[].concat(schedules).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  el.innerHTML=sorted.map(function(s){
-    var d=new Date(s.date); d.setHours(0,0,0,0);
-    var diff=Math.round((d-today)/(1000*60*60*24));
-    var ddayStr=diff===0?'D-Day':diff>0?'D-'+diff:'D+'+Math.abs(diff);
-    var ddayCol=diff===0?'var(--danger)':diff<0?'var(--sub)':'var(--accent)';
-    return '<div class="sched-item">'
-      +'<div class="sched-dday" style="color:'+ddayCol+'">'+ddayStr+'</div>'
-      +'<div class="sched-info">'
-      +'<div class="sched-title">'+s.title+'</div>'
-      +'<div class="sched-date">'+s.date+(s.memo?' · '+s.memo:'')+'</div>'
-      +'</div>'
-      +'<button class="sched-del" onclick="delSched(\''+s.id+'\')">🗑️</button>'
-      +'</div>';
-  }).join('');
-}
-
-function addSched(){
-  var title=document.getElementById('sc-title').value.trim();
-  var date=document.getElementById('sc-date').value;
-  var memo=document.getElementById('sc-memo').value.trim();
-  if(!title){toast('⚠️ 일정 제목을 입력하세요');return;}
-  if(!date){toast('⚠️ 날짜를 입력하세요');return;}
-  schedules.push({id:Date.now().toString(),title:title,date:date,memo:memo});
-  localStorage.setItem('schedules',JSON.stringify(schedules));
-  document.getElementById('sc-title').value='';
-  document.getElementById('sc-date').value='';
-  document.getElementById('sc-memo').value='';
-  toast('📅 일정 추가 완료');
-  renderSched();
-}
-
-function delSched(id){
-  schedules=schedules.filter(function(s){return s.id!==id;});
-  localStorage.setItem('schedules',JSON.stringify(schedules));
-  toast('🗑️ 일정 삭제');
-  renderSched();
-}
-
-// ── Settings ───────────────────────────────
-function saveSettings(){
-  var kakao=document.getElementById('s-kakao').value.trim();
-  var molit=document.getElementById('s-molit').value.trim();
-  if(kakao) localStorage.setItem('api-kakao',kakao);
-  if(molit) localStorage.setItem('api-molit',molit);
-  toast('✅ API 키 저장 완료');
-  mapInited=false;
-}
-
-// ── Loan Calculator ────────────────────────
-function calcL(){
-  var priceWon=(parseFloat(document.getElementById('l-price').value)||0)*10000;
-  var selfWon=(parseFloat(document.getElementById('l-self').value)||0)*10000;
-  var years=parseInt(document.getElementById('l-years').value)||20;
-  var repayType=document.getElementById('l-type').value;
-  var el=document.getElementById('loan-result');
-  if(!priceWon){el.innerHTML='';return;}
-  var needLoan=Math.max(0,priceWon-selfWon);
-  var loanAmt=Math.min(needLoan,MAX_LOAN_LIMIT);
-  var selfShort=needLoan>MAX_LOAN_LIMIT?needLoan-MAX_LOAN_LIMIT:0;
-  var rate=BORROWER_RATE;
-  var mRate=rate/12;
-  var n=years*12;
-  var monthlyPayment=0;
-  if(loanAmt>0&&mRate>0){
-    if(repayType==='equal'){
-      monthlyPayment=loanAmt*mRate*Math.pow(1+mRate,n)/(Math.pow(1+mRate,n)-1);
-    } else {
-      monthlyPayment=(loanAmt/n)+(loanAmt*mRate);
+        return parseXmlResponse(text);
+      } catch (err) {
+        console.error('API 호출 오류:', err);
+        throw new Error(`API 호출 실패: ${err.message}. API 키를 확인해주세요.`);
+      }
     }
-  }
-  var totalPay=repayType==='equal'?monthlyPayment*n:loanAmt+(loanAmt*mRate*(n+1)/2);
-  var totalInterest=totalPay-loanAmt;
-  var withinBudget=priceWon<=TOTAL_BUDGET;
-  el.innerHTML='<div class="loan-result">'
-    +'<div class="lr-main">월 '+fmtWon(Math.round(monthlyPayment))+'</div>'
-    +'<div class="lr-sub">'+(repayType==='equal'?'원리금균등':'원금균등(초회)')+' · 금리 '+(rate*100).toFixed(2)+'% · '+years+'년</div>'
-    +'</div>'
-    +'<div class="loan-grid">'
-    +'<div class="loan-box"><div class="lv" style="color:var(--accent)">'+fmtWon(loanAmt)+'</div><div class="lk">대출금액</div></div>'
-    +'<div class="loan-box"><div class="lv">'+fmtWon(Math.round(totalInterest))+'</div><div class="lk">총 이자</div></div>'
-    +'<div class="loan-box"><div class="lv">'+fmtWon(Math.round(totalPay))+'</div><div class="lk">총 상환액</div></div>'
-    +'<div class="loan-box"><div class="lv" style="color:'+(withinBudget?'var(--accent2)':'var(--danger)')+'">'+( withinBudget?'✅ 가능':'❌ 초과')+'</div><div class="lk">예산 내</div></div>'
-    +'</div>'
-    +'<div style="font-size:.78rem;color:var(--sub);margin-top:10px;line-height:1.7">'
-    +'<div>주택가격: '+fmtWon(priceWon)+'</div>'
-    +'<div>자체자금: '+fmtWon(selfWon)+'</div>'
-    +'<div>필요대출: '+fmtWon(needLoan)+'</div>'
-    +(selfShort?'<div style="color:var(--danger)">⚠️ 한도 초과 부족분: '+fmtWon(selfShort)+'</div>':'')
-    +'<div style="margin-top:6px;font-size:.73rem">※ COFIX 3.5% + 가산금리 1.45% − 서울시 지원 2.0% = 실부담 <strong>2.95%</strong></div>'
-    +'</div>';
-}
-
-// ── Firebase ───────────────────────────────
-function loadScript(src){
-  return new Promise(function(res,rej){
-    var s=document.createElement('script');
-    s.src=src; s.onload=res; s.onerror=rej;
-    document.head.appendChild(s);
-  });
-}
-
-async function initFirebase(){
-  var fbUrl=document.getElementById('s-fb-url').value.trim();
-  var fbId=document.getElementById('s-fb-id').value.trim();
-  if(!fbUrl||!fbId){toast('⚠️ Firebase URL과 동기화 ID를 입력하세요');return;}
-  localStorage.setItem('fb-url',fbUrl);
-  localStorage.setItem('fb-id',fbId);
-  fbPath='sinhonjip/'+fbId;
-  try{
-    if(!window.firebase){
-      await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
-      await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js');
+    function parseXmlResponse(xml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const items = doc.querySelectorAll('item');
+      const result = [];
+      items.forEach(item => {
+        const get = (tag) => item.querySelector(tag)?.textContent?.trim() || '';
+        result.push({
+          aptName: get('아파트'),
+          dong: get('법정동'),
+          area: parseFloat(get('전용면적') || '0'),
+          deposit: parseInt((get('보증금액') || '0').replace(/,/g, '')),
+          monthlyRent: parseInt((get('월세금액') || '0').replace(/,/g, '')),
+          floor: get('층'),
+          buildYear: get('건축년도'),
+          dealYear: get('년'),
+          dealMonth: get('월').padStart(2, '0'),
+          dealDay: get('일').padStart(2, '0'),
+          type: parseInt((get('월세금액') || '0').replace(/,/g, '')) > 0 ? '반전세' : '전세',
+        });
+      });
+      return result;
     }
-    var app;
-    try{app=firebase.app('sinhonjip');}
-    catch(e){app=firebase.initializeApp({databaseURL:fbUrl},'sinhonjip');}
-    fbDb=firebase.database(app);
-    if(fbListener){fbListener.off();fbListener=null;}
-    fbListener=fbDb.ref(fbPath);
-    fbListener.on('value',function(snap){
-      var data=snap.val()||{};
-      if(data.favs) PROPS.forEach(function(p){p.fav=!!(data.favs[p.id]);});
-      if(data.memos) PROPS.forEach(function(p){p.memo=data.memos[p.id]||p.memo||'';});
-      updateFavTabCount();
-      applyF();
-      if(document.getElementById('pg-favs').classList.contains('on')) renderFavs();
-    });
-    setFbStatus(true);
-    toast('🔥 Firebase 연결 성공');
-  }catch(e){
-    setFbStatus(false,e.message);
-    toast('❌ Firebase 연결 실패: '+e.message,3500);
-  }
-}
+    function stringSimilarity(a, b) {
+      if (!a || !b) return 0;
+      const setA = new Set(a.split(''));
+      const setB = new Set(b.split(''));
+      const intersection = new Set([...setA].filter(x => setB.has(x)));
+      const union = new Set([...setA, ...setB]);
+      return intersection.size / union.size;
+    }
+    function deduplicateListings(listings) {
+      const groups = new Map();
+      listings.forEach(item => {
+        const exactKey = `${item.aptName}_${item.dong}_${Math.round(item.area)}_${item.deposit}`;
+        if (groups.has(exactKey)) {
+          groups.get(exactKey).count += 1;
+          return;
+        }
+        let merged = false;
+        for (const [key, group] of groups) {
+          const rep = group.rep;
+          const nameSim = stringSimilarity(item.aptName, rep.aptName);
+          const areaDiff = Math.abs(item.area - rep.area);
+          const depositDiff = Math.abs(item.deposit - rep.deposit);
+          if (nameSim >= 0.8 && areaDiff <= 3 && depositDiff <= 500) {
+            group.count += 1;
+            if ((item.dealYear + item.dealMonth + item.dealDay) >
+                (rep.dealYear + rep.dealMonth + rep.dealDay)) {
+              group.rep = item;
+            }
+            merged = true;
+            break;
+          }
+        }
+        if (!merged) {
+          groups.set(exactKey, { rep: item, count: 1 });
+        }
+      });
+      return Array.from(groups.values()).map(g => ({
+        ...g.rep,
+        brokerCount: g.count,
+      }));
+    }
+    function checkLoanEligibility(deposit) {
+      return deposit <= 70000;
+    }
+    function calcMonthlyInterest(loanAmount) {
+      const annualRate = 0.0295;
+      return Math.round(loanAmount * annualRate / 12);
+    }
+    function getDemoData(lawdCd, dealYmd) {
+      const guNames = {
+        '11680': '역삼동', '11710': '문정동', '11650': '반포동',
+        '11440': '마포동', '11380': '불광동', '11200': '행당동',
+      };
+      const guName = Object.keys(SEOUL_GU).find(key => SEOUL_GU[key] === lawdCd) || '서울시';
+      const dong = guNames[lawdCd] || `${guName} ○○동`;
+      const apts = ['래미안', '힐스테이트', '푸르지오', 'e편한세상', '자이', '아이파크'];
+      const data = [];
+      for (let i = 0; i < 45; i++) {
+        const name = `${dong.replace('동','')[0]}○○ ${apts[i % apts.length]} ${Math.floor(i/apts.length)+1}단지`;
+        const area = [59.97, 74.05, 84.93][i % 3];
+        const deposit = 35000 + (i * 2000) + Math.floor(Math.random() * 1000);
+        const monthly = i % 4 === 0 ? 50 + i * 5 : 0;
 
-function disconnectFirebase(){
-  if(fbListener){fbListener.off();fbListener=null;}
-  fbDb=null; fbPath='';
-  localStorage.removeItem('fb-url');
-  localStorage.removeItem('fb-id');
-  document.getElementById('s-fb-url').value='';
-  document.getElementById('s-fb-id').value='';
-  setFbStatus(false);
-  toast('🔌 Firebase 연결 해제');
-}
+        const isDuplicate = i > 30 && Math.random() > 0.5;
 
-function setFbStatus(ok,msg){
-  var box=document.getElementById('fb-status-box');
-  var txt=document.getElementById('fb-status-text');
-  box.style.display='block';
-  if(ok){
-    box.style.background='#f0fdf4'; box.style.borderColor='#bbf7d0';
-    txt.style.color='var(--accent2)';
-    txt.textContent='✅ Firebase 연결됨 (실시간 동기화 활성화)';
-  } else {
-    box.style.background='#fff5f5'; box.style.borderColor='#fed7d7';
-    txt.style.color='var(--danger)';
-    txt.textContent='❌ 연결 안 됨'+(msg?' - '+msg:'');
-  }
-}
+        data.push({
+          aptName: isDuplicate ? data[i-15].aptName : name,
+          dong: isDuplicate ? data[i-15].dong : dong,
+          area: isDuplicate ? data[i-15].area : area,
+          deposit: isDuplicate ? data[i-15].deposit : deposit,
+          monthlyRent: isDuplicate ? data[i-15].monthlyRent : monthly,
+          floor: String(Math.floor(Math.random() * 20) + 1),
+          buildYear: String(2000 + (i * 2)),
+          dealYear: dealYmd.substring(0, 4),
+          dealMonth: dealYmd.substring(4, 6),
+          dealDay: String(Math.floor(Math.random() * 28) + 1).padStart(2, '0'),
+          type: (isDuplicate ? data[i-15].monthlyRent : monthly) > 0 ? '반전세' : '전세',
+        });
+      }
 
-function syncFavsToFirebase(){
-  if(!fbDb) return;
-  var favMap={};
-  PROPS.forEach(function(p){if(p.fav) favMap[p.id]=true;});
-  fbDb.ref(fbPath+'/favs').set(favMap).catch(function(){});
-}
+      return data.sort(() => Math.random() - 0.5);
+    }
+    const formatPrice = (price) => {
+      if (price === 0) return '0';
+      if (price >= 10000) {
+        const uk = Math.floor(price / 10000);
+        const man = price % 10000;
+        return `${uk}억 ${man > 0 ? man.toLocaleString() : ''}`;
+      }
+      return price.toLocaleString();
+    };
+    // ==========================================
+    // 3. 메인 애플리케이션 UI
+    // ==========================================
+    function App() {
+      const [apiKey, setApiKey] = useState(() => {
+        const localKey = localStorage.getItem('molit_api_key');
+        if (!localKey && !isInvalidKey(DEFAULT_API_KEY)) {
+           return DEFAULT_API_KEY;
+        }
+        return localKey || '';
+      });
 
-function saveMemoToFirebase(id,val){
-  if(!fbDb) return;
-  fbDb.ref(fbPath+'/memos/'+id).set(val).catch(function(){});
-}
+      const [showSettings, setShowSettings] = useState(false);
 
-// ── Init ───────────────────────────────────
-(function(){
-  var kk=localStorage.getItem('api-kakao');
-  var ml=localStorage.getItem('api-molit');
-  if(kk) document.getElementById('s-kakao').value=kk;
-  if(ml) document.getElementById('s-molit').value=ml;
-  var fbUrl=localStorage.getItem('fb-url');
-  var fbId=localStorage.getItem('fb-id');
-  if(fbUrl&&fbId){
-    document.getElementById('s-fb-url').value=fbUrl;
-    document.getElementById('s-fb-id').value=fbId;
-    setTimeout(initFirebase,800);
-  }
-  var td=new Date().toISOString().split('T')[0];
-  document.getElementById('sc-date').value=td;
-  applyF();
-  updateFavTabCount();
-  calcL();
-})();
-</script>
+      const [selectedGu, setSelectedGu] = useState('11680');
+      const [selectedMonth, setSelectedMonth] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      });
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState(null);
+      const [originalListings, setOriginalListings] = useState([]);
+      const [isDemoMode, setIsDemoMode] = useState(false);
+      const handleSaveApiKey = (e) => {
+        const val = e.target.value;
+        setApiKey(val);
+        localStorage.setItem('molit_api_key', val);
+      };
+      const handleSearch = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const dealYmd = selectedMonth.replace('-', '');
+          setIsDemoMode(isInvalidKey(apiKey));
+
+          const data = await fetchAptRent(selectedGu, dealYmd, apiKey);
+          setOriginalListings(data);
+        } catch (err) {
+          setError(err.message);
+          setOriginalListings([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      const processedData = useMemo(() => {
+        if (!originalListings || originalListings.length === 0) return { listings: [], stats: {} };
+
+        const deduped = deduplicateListings(originalListings);
+
+        deduped.sort((a, b) => {
+          if (a.deposit !== b.deposit) return a.deposit - b.deposit;
+          return b.area - a.area;
+        });
+        const stats = {
+          total: originalListings.length,
+          deduped: deduped.length,
+          removed: originalListings.length - deduped.length,
+          loanEligible: deduped.filter(i => checkLoanEligibility(i.deposit)).length
+        };
+        return { listings: deduped, stats };
+      }, [originalListings]);
+      useEffect(() => {
+        handleSearch();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
+      return (
+        <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-12">
+          {/* 헤더 */}
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-blue-600">
+                <Home size={28} className="stroke-[2.5]" />
+                <h1 className="text-xl font-bold tracking-tight">유해인 포트폴리오</h1>
+              </div>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+                title="설정"
+              >
+                <Settings size={20} />
+              </button>
+            </div>
+          </header>
+          <main className="max-w-5xl mx-auto px-4 pt-6 space-y-6">
+            {/* 설정 패널 */}
+            {showSettings && (
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2">
+                <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                  <Key size={16} className="text-slate-500"/> API 키 설정
+                </h2>
+                <p className="text-xs text-slate-500 mb-3 leading-relaxed">
+                  공공데이터포털의 <strong>'국토교통부_아파트전월세 자료'</strong> 인증키를 입력하세요.<br/>
+                  비워두면 <strong>데모 모드(가상 데이터)</strong>로 작동합니다.
+                </p>
+                <input
+                  type="text"
+                  value={apiKey}
+                  onChange={handleSaveApiKey}
+                  placeholder="발급받은 인증키를 입력하세요"
+                  className="w-full text-sm p-3 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
+              </div>
+            )}
+            {/* 검색 패널 */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* 자치구 선택 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                    <MapPin size={14} /> 자치구
+                  </label>
+                  <select
+                    value={selectedGu}
+                    onChange={(e) => setSelectedGu(e.target.value)}
+                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    {Object.entries(SEOUL_GU).map(([guName, code]) => (
+                      <option key={code} value={code}>{guName}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* 계약연월 선택 */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                    <Calendar size={14} /> 계약연월
+                  </label>
+                  <input
+                    type="month"
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                {/* 조회(업데이트) 버튼 */}
+                <div className="flex items-end">
+                  <button
+                    onClick={handleSearch}
+                    disabled={loading}
+                    className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+                  >
+                    {loading ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <><Zap size={18} /> 업데이트</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* 에러 메시지 */}
+            {error && (
+              <div className="bg-red-50 text-red-700 p-4 rounded-xl flex items-start gap-3 border border-red-100">
+                <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                <p className="text-sm leading-relaxed">{error}</p>
+              </div>
+            )}
+            {/* 결과 요약 */}
+            {!loading && !error && processedData.listings.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
+                  <div className="text-xs text-slate-500 mb-1">총 수집 매물</div>
+                  <div className="text-xl font-bold">{processedData.stats.total}건</div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center shadow-sm">
+                  <div className="text-xs text-blue-600 font-medium mb-1 flex items-center justify-center gap-1">
+                    <Layers size={14} /> 중복 제거됨
+                  </div>
+                  <div className="text-xl font-bold text-blue-700">-{processedData.stats.removed}건</div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
+                  <div className="text-xs text-slate-500 mb-1">최종 고유 매물</div>
+                  <div className="text-xl font-bold">{processedData.stats.deduped}건</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center shadow-sm">
+                  <div className="text-xs text-green-700 font-medium mb-1">대출가능 (7억 이하)</div>
+                  <div className="text-xl font-bold text-green-800">{processedData.stats.loanEligible}건</div>
+                </div>
+              </div>
+            )}
+            {/* 매물 리스트 */}
+            {!loading && !error && processedData.listings.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {processedData.listings.map((item, idx) => {
+                  const isLoanEligible = checkLoanEligibility(item.deposit);
+                  const loanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
+                  const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
+                  return (
+                    <div key={idx} className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow group flex flex-col">
+                      <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
+                            {item.type}
+                          </span>
+                          {item.brokerCount > 1 && (
+                            <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-slate-200 text-slate-600 flex items-center gap-1" title="유사 매물이 중복 접수된 횟수">
+                              <Layers size={10} /> 중복 {item.brokerCount}건 통합
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-lg text-slate-800 truncate" title={item.aptName}>
+                          {item.aptName}
+                        </h3>
+                        <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+                          <MapPin size={12} /> {item.dong}
+                        </p>
+                      </div>
+                      <div className="p-4 space-y-4 flex-1">
+                        <div>
+                          <div className="flex items-end gap-2">
+                            <span className="text-xs text-slate-500 font-medium pb-1">보증금</span>
+                            <span className="text-2xl font-extrabold tracking-tight text-slate-900">
+                              {formatPrice(item.deposit)}
+                            </span>
+                          </div>
+                          {item.monthlyRent > 0 && (
+                            <div className="flex items-end gap-2 mt-1">
+                              <span className="text-xs text-slate-500 font-medium pb-0.5">월세</span>
+                              <span className="text-lg font-bold text-orange-600">
+                                {formatPrice(item.monthlyRent)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-2 text-sm">
+                          <div className="flex items-center gap-1.5 text-slate-600">
+                            <div className="w-5 flex justify-center text-slate-400"><Building2 size={14} /></div>
+                            {item.area}㎡
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-600">
+                            <div className="w-5 flex justify-center text-slate-400"><Layers size={14} /></div>
+                            {item.floor}층
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-600">
+                            <div className="w-5 flex justify-center text-slate-400"><Calendar size={14} /></div>
+                            {item.buildYear}년식
+                          </div>
+                          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+                            계약일: {item.dealMonth}.{item.dealDay}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 bg-slate-50 border-t border-slate-100">
+                        {isLoanEligible ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between text-xs font-semibold text-green-700">
+                              <span className="flex items-center gap-1">
+                                <CheckCircle2 size={14} /> 서울시 신혼부부 이자지원 대상
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 flex justify-between">
+                              <span>예상 대출 80%: {formatPrice(loanAmount)}</span>
+                              <span>월 이자 약 {formatPrice(monthlyInterest)}원</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-400 text-center py-1">
+                            보증금 7억 초과 (서울시 대출지원 제외)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {!loading && !error && processedData.listings.length === 0 && (
+              <div className="text-center py-20 text-slate-500 bg-white rounded-xl border border-slate-200">
+                <Building2 size={48} className="mx-auto text-slate-300 mb-4" />
+                <p className="text-lg font-medium">해당 조건의 실거래가 내역이 없습니다.</p>
+                <p className="text-sm mt-1">다른 자치구나 기간을 선택해보세요.</p>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
