@@ -353,6 +353,43 @@
 
       return data.sort(() => Math.random() - 0.5);
     }
+    // ==========================================
+    // 스마트 우선순위 점수 함수
+    // 우선순위: ① 전세 ② 보증금 6억 근접 ③ 서울시 이자지원 가능 ④ 서울역/문정동 교통
+    // ==========================================
+    const TARGET_DEPOSIT = 60000; // 6억 (단위: 만원)
+    const LOAN_MAX = 70000;       // 서울시 이자지원 한도 7억
+
+    function smartScore(item) {
+      let score = 0;
+      // ① 전세 최우선 (+100)
+      if (item.type === '전세') score += 100;
+      // ③ 서울시 이자지원 가능 (보증금 7억 이하, +50)
+      if (item.deposit <= LOAN_MAX) score += 50;
+      // ② 6억 근접 점수 (±5천만 = 40점, 이후 거리에 따라 감점)
+      const diff = Math.abs(item.deposit - TARGET_DEPOSIT);
+      if (diff <= 5000)  score += 40;
+      else if (diff <= 10000) score += 30;
+      else if (diff <= 20000) score += 18;
+      else if (diff <= 30000) score += 8;
+      // ④ 교통 가산: 서울역/문정동 인접 동 이름 포함 시 (+20)
+      const transportDong = ['용산', '중구', '남대문', '회현', '서울역', '문정', '장지', '위례', '송파', '마포', '공덕', '서강', '신촌', '홍대'];
+      if (transportDong.some(d => (item.dong || '').includes(d))) score += 20;
+      return score;
+    }
+
+    // 네이버 부동산 검색 URL
+    function naverLandUrl(aptName, dong) {
+      const query = encodeURIComponent(`${aptName} ${dong || ''}`);
+      return `https://m.land.naver.com/search/result/${query}`;
+    }
+
+    // 카카오맵 경로 (출발지: 아파트동, 도착지: 서울역 or 문정동)
+    function kakaoTransitUrl(dong, dest) {
+      const destName = dest === 'seoul' ? '서울역' : '문정동';
+      return `https://map.kakao.com/?sName=${encodeURIComponent((dong||'서울')+'아파트')}&eName=${encodeURIComponent(destName)}&service=subway`;
+    }
+
     const formatPrice = (price) => {
       if (price === 0) return '0';
       if (price >= 10000) {
@@ -430,9 +467,12 @@
 
         const deduped = deduplicateListings(originalListings);
 
+        // 스마트 우선순위 정렬: ①전세 ②6억근접 ③이자지원 ④교통
         deduped.sort((a, b) => {
-          if (a.deposit !== b.deposit) return a.deposit - b.deposit;
-          return b.area - a.area;
+          const diff = smartScore(b) - smartScore(a);
+          if (diff !== 0) return diff;
+          // 동점이면 6억에 더 가까운 순
+          return Math.abs(a.deposit - TARGET_DEPOSIT) - Math.abs(b.deposit - TARGET_DEPOSIT);
         });
 
         const filtered = typeFilter === '전체' ? deduped
@@ -446,6 +486,7 @@
           loanEligible: deduped.filter(i => checkLoanEligibility(i.deposit)).length,
           jeonse: deduped.filter(i => i.type === '전세').length,
           monthly: deduped.filter(i => i.type !== '전세').length,
+          near6Uk: deduped.filter(i => i.type === '전세' && Math.abs(i.deposit - TARGET_DEPOSIT) <= 10000 && i.deposit <= LOAN_MAX).length,
         };
         return { listings: filtered, stats };
       }, [originalListings, typeFilter]);
@@ -581,8 +622,8 @@
                   <div className="text-xl font-bold">{processedData.stats.deduped}건</div>
                 </div>
                 <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center shadow-sm">
-                  <div className="text-xs text-green-700 font-medium mb-1">대출가능 (7억 이하)</div>
-                  <div className="text-xl font-bold text-green-800">{processedData.stats.loanEligible}건</div>
+                  <div className="text-xs text-green-700 font-medium mb-1">🎯 전세·6억·대출 충족</div>
+                  <div className="text-xl font-bold text-green-800">{processedData.stats.near6Uk}건</div>
                 </div>
               </div>
             )}
@@ -619,13 +660,22 @@
                   const isLoanEligible = checkLoanEligibility(item.deposit);
                   const loanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
                   const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
+                  const score = smartScore(item);
+                  const isTop = score >= 180; // 전세+이자지원+6억근접 모두 충족
+                  const depositDiff = Math.abs(item.deposit - TARGET_DEPOSIT);
                   return (
-                    <div key={idx} className="bg-white rounded-xl border border-slate-200 overflow-hidden active:shadow-md transition-shadow flex flex-col">
+                    <div key={idx} className={`bg-white rounded-xl border overflow-hidden active:shadow-md transition-shadow flex flex-col ${isTop ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}>
                       <div className="px-4 pt-3 pb-2 border-b border-slate-100">
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
-                            {item.type}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
+                              {item.type}
+                            </span>
+                            {isTop && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">🎯 추천</span>}
+                            {depositDiff <= 10000 && !isTop && item.type === '전세' && isLoanEligible && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">6억근접</span>
+                            )}
+                          </div>
                           {item.brokerCount > 1 && (
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 flex items-center gap-0.5">
                               <Layers size={9} /> {item.brokerCount}건 통합
@@ -675,6 +725,36 @@
                             보증금 7억 초과 (서울시 대출지원 제외)
                           </div>
                         )}
+                      </div>
+                      {/* 네이버 부동산 + 교통 버튼 */}
+                      <div className="px-3 pb-3 pt-1 flex gap-1.5">
+                        <a
+                          href={naverLandUrl(item.aptName, item.dong)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-green-500 hover:bg-green-600 text-white text-[11px] font-bold rounded-lg transition-colors"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+                          네이버 매물
+                        </a>
+                        <a
+                          href={kakaoTransitUrl(item.dong, 'seoul')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-[11px] font-bold rounded-lg transition-colors"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          서울역
+                        </a>
+                        <a
+                          href={kakaoTransitUrl(item.dong, 'munjeong')}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-bold rounded-lg transition-colors"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          문정동
+                        </a>
                       </div>
                     </div>
                   );
