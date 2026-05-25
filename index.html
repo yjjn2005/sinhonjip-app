@@ -429,6 +429,7 @@
       const [originalListings, setOriginalListings] = useState([]);
       const [isDemoMode, setIsDemoMode] = useState(false);
       const [typeFilter, setTypeFilter] = useState('전체');
+      const [minArea, setMinArea] = useState(59); // 기본 59㎡ 이상
       const handleSaveApiKey = (e) => {
         const val = e.target.value;
         setApiKey(val);
@@ -482,26 +483,29 @@
 
         const isTopItem = (i) => smartScore(i) >= 180;
 
-        const filtered = typeFilter === '추천'
-          ? deduped.filter(isTopItem)
-          : typeFilter === '전세'
-          ? deduped.filter(i => i.type === '전세')
-          : typeFilter === '월세'
-          ? deduped.filter(i => i.type !== '전세')
-          : deduped; // 전체
+        // 면적 필터 먼저 적용
+        const areaFiltered = deduped.filter(i => i.area >= minArea);
 
-        const topCount = deduped.filter(isTopItem).length;
+        const filtered = typeFilter === '추천'
+          ? areaFiltered.filter(isTopItem)
+          : typeFilter === '전세'
+          ? areaFiltered.filter(i => i.type === '전세')
+          : typeFilter === '월세'
+          ? areaFiltered.filter(i => i.type !== '전세')
+          : areaFiltered; // 전체
+
+        const topCount = areaFiltered.filter(isTopItem).length;
         const stats = {
           total: originalListings.length,
-          deduped: deduped.length,
-          removed: originalListings.length - deduped.length,
+          deduped: areaFiltered.length,
+          removed: originalListings.length - areaFiltered.length,
           topCount,
-          jeonse: deduped.filter(i => i.type === '전세').length,
-          monthly: deduped.filter(i => i.type !== '전세').length,
+          jeonse: areaFiltered.filter(i => i.type === '전세').length,
+          monthly: areaFiltered.filter(i => i.type !== '전세').length,
           near6Uk: topCount,
         };
         return { listings: filtered, stats };
-      }, [originalListings, typeFilter]);
+      }, [originalListings, typeFilter, minArea]);
       useEffect(() => {
         handleSearch();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -594,6 +598,29 @@
                     onChange={(e) => setSelectedMonth(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                </div>
+              </div>
+              {/* 전용면적 필터 */}
+              <div className="mt-3">
+                <label className="text-xs font-semibold text-slate-500 flex items-center gap-1 mb-1.5">
+                  <Building2 size={12} /> 전용면적 (㎡ 이상)
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { label: '전체', val: 0 },
+                    { label: '59㎡~', val: 59 },
+                    { label: '74㎡~', val: 74 },
+                    { label: '84㎡~', val: 84 },
+                  ].map(opt => (
+                    <button key={opt.val} onClick={() => setMinArea(opt.val)}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
+                        minArea === opt.val
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
+                      }`}>
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
               {/* 조회 버튼 */}
