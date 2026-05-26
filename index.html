@@ -672,10 +672,6 @@ function dabangUrl(aptName, dong) {
             const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
             const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
             if (aHas !== bHas) return bHas - aHas;
-            // 실매물 확인 단지 최우선
-            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
-            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
-            if (aHas !== bHas) return bHas - aHas;
             const dateDiff = dateKey(b) - dateKey(a);
             if (dateDiff !== 0) return dateDiff;
             return smartScore(b) - smartScore(a); // 같은 날짜면 추천점수순
@@ -683,6 +679,10 @@ function dabangUrl(aptName, dong) {
         } else {
           // 추천 우선순위 정렬: ①전세 ②6억근접 ③이자지원 ④교통
           deduped.sort((a, b) => {
+            // 실매물 확인 단지 최우선
+            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
+            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
+            if (aHas !== bHas) return bHas - aHas;
             const diff = smartScore(b) - smartScore(a);
             if (diff !== 0) return diff;
             return Math.abs(a.deposit - TARGET_DEPOSIT) - Math.abs(b.deposit - TARGET_DEPOSIT);
