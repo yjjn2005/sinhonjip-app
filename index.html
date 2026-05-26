@@ -365,6 +365,17 @@
       '올림픽훼밀리타운': 'https://new.land.naver.com/complexes/8642',
       '래미안': 'https://new.land.naver.com/complexes/101930',
       '꿈에그린': 'https://new.land.naver.com/complexes/113199',
+      '청계SKVIEW': 'https://new.land.naver.com/search?query=' + encodeURIComponent('청계SKVIEW'),
+      '청계SK뷰': 'https://new.land.naver.com/search?query=' + encodeURIComponent('청계SK뷰'),
+      '벽산': 'https://new.land.naver.com/search?query=' + encodeURIComponent('금호벽산'),
+      'e편한세상': 'https://new.land.naver.com/search?query=' + encodeURIComponent('e편한세상'),
+      '자이': 'https://new.land.naver.com/search?query=' + encodeURIComponent('자이'),
+      '롯데캐슬': 'https://new.land.naver.com/search?query=' + encodeURIComponent('롯데캐슬'),
+      '푸르지오': 'https://new.land.naver.com/search?query=' + encodeURIComponent('푸르지오'),
+      '힐스테이트': 'https://new.land.naver.com/search?query=' + encodeURIComponent('힐스테이트'),
+      '아이파크': 'https://new.land.naver.com/search?query=' + encodeURIComponent('아이파크'),
+      '센트레빌': 'https://new.land.naver.com/search?query=' + encodeURIComponent('센트레빌'),
+      '두산위브': 'https://new.land.naver.com/search?query=' + encodeURIComponent('두산위브'),
     };
     function getNaverComplexUrl(aptName) {
       if (!aptName) return null;
@@ -657,6 +668,14 @@ function dabangUrl(aptName, dong) {
         if (sortOrder === 'recent') {
           // 최근순 내림차순 (거래일 최신 → 오래된 순)
           deduped.sort((a, b) => {
+            // 실매물 확인 단지 최우선
+            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
+            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
+            if (aHas !== bHas) return bHas - aHas;
+            // 실매물 확인 단지 최우선
+            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
+            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
+            if (aHas !== bHas) return bHas - aHas;
             const dateDiff = dateKey(b) - dateKey(a);
             if (dateDiff !== 0) return dateDiff;
             return smartScore(b) - smartScore(a); // 같은 날짜면 추천점수순
@@ -949,6 +968,7 @@ function dabangUrl(aptName, dong) {
                               {item.type}
                             </span>
                             {isTop && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">🎯 추천</span>}
+                  {getNaverComplexUrl(item.aptName) && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500 text-white">🏠 실매물</span>}
                             {depositDiff <= 10000 && !isTop && item.type === '전세' && isLoanEligible && (
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">6억근접</span>
                             )}
