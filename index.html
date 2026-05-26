@@ -492,14 +492,20 @@
     }
 
     // 매물 링크 함수들
-    function naverLandUrl(aptName) {
-      // 네이버 부동산 모바일 단지 검색 (아파트명만, 특수문자 제거)
-      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
-      return `https://m.land.naver.com/search?query=${encodeURIComponent(name)}`;
+    function naverLandUrl(aptName, dong) {
+      // 네이버 부동산 검색 (아파트명 + 동명으로 정확도 향상, 단지 직접 연결)
+      const name = (aptName || '').replace(/[()\[\]·\.,\s]/g, ' ').trim();
+      const dongName = (dong || '').trim();
+      const query = (name + ' ' + dongName).trim();
+      const directUrl = getNaverComplexUrl(aptName);
+      if (directUrl) return directUrl;
+      return `https://m.land.naver.com/search?query=${encodeURIComponent(query)}`;
     }
-function dabangUrl(aptName) {
-      const name = (aptName || '').replace(/[()（）,，]/g, ' ').trim();
-      return `https://www.dabangapp.com/search?query=${encodeURIComponent(name)}`;
+function dabangUrl(aptName, dong) {
+      const name = (aptName || '').replace(/[()\[\]·\.,\s]/g, ' ').trim();
+      const dongName = (dong || '').trim();
+      const query = (name + ' ' + dongName).trim();
+      return `https://www.dabangapp.com/search?query=${encodeURIComponent(query)}`;
     }
 
     // 카카오맵 경로 (출발지: 아파트동, 도착지: 서울역 or 문정동)
@@ -978,11 +984,11 @@ function dabangUrl(aptName) {
                       <div className="px-3 pb-3 pt-2 flex flex-col gap-2">
                         {/* 현재 매물 검색 — 네이버 + 다방 */}
                         <div className="grid grid-cols-2 gap-1.5">
-                          <a href={naverLandUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                          <a href={naverLandUrl(item.aptName, item.dong)} target="_blank" rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl transition-colors shadow-sm font-extrabold text-sm">
                             <span className="text-lg font-black leading-none">N</span>네이버 매물
                           </a>
-                          <a href={dabangUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                          <a href={dabangUrl(item.aptName, item.dong)} target="_blank" rel="noopener noreferrer"
                             className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-xl transition-colors shadow-sm font-extrabold text-sm">
                             <span className="text-lg font-black leading-none">D</span>다방 매물
                           </a>
