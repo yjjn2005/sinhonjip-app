@@ -360,6 +360,20 @@
     const TARGET_DEPOSIT = 60000;
     const LOAN_MAX = 70000;
 
+    // 네이버 부동산 단지 직접 링크 매핑
+    const NAVER_COMPLEX_MAP = {
+      '올림픽훼밀리타운': 'https://new.land.naver.com/complexes/8642',
+      '래미안': 'https://new.land.naver.com/complexes/101930',
+      '꿈에그린': 'https://new.land.naver.com/complexes/113199',
+    };
+    function getNaverComplexUrl(aptName) {
+      if (!aptName) return null;
+      for (const [key, url] of Object.entries(NAVER_COMPLEX_MAP)) {
+        if (aptName.includes(key)) return url;
+      }
+      return null;
+    }
+
     // 서울 주요 동별 대중교통 시간 (분) — 서울역, 문정역 기준
     // 출처: 지하철 노선도 + 환승 시간 반영 추정치 (실제 ±5분 오차 가능)
     const TRANSIT_MAP = {
@@ -875,7 +889,9 @@ function dabangUrl(aptName) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {processedData.listings.map((item, idx) => {
                   const isLoanEligible = checkLoanEligibility(item.deposit);
-                  const loanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
+                  const rawLoanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
+              const loanAmount = Math.min(rawLoanAmount, 30000);
+              const loanExceeded = rawLoanAmount > 30000;
                   const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
                   const score = smartScore(item);
                   const transit = getTransit(item.dong);
@@ -946,6 +962,11 @@ function dabangUrl(aptName) {
                               <span>대출 80%: {formatPrice(loanAmount)}</span>
                               <span>월이자 약 {formatInterest(monthlyInterest)}</span>
                             </div>
+                            {loanExceeded && (
+                              <div className="text-[10px] text-red-500 font-semibold mt-0.5">
+                                ⚠️ 대출 한도 3억원 초과 → 3억원으로 제한
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-xs text-slate-400 text-center py-1">
@@ -966,6 +987,12 @@ function dabangUrl(aptName) {
                             <span className="text-lg font-black leading-none">D</span>다방 매물
                           </a>
                         </div>
+                        {getNaverComplexUrl(item.aptName) && (
+                          <a href={getNaverComplexUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-1 py-1.5 bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white rounded-lg text-[11px] font-bold transition-colors shadow-sm mt-1">
+                            🏠 네이버 부동산에서 보기
+                          </a>
+                        )}
                         {/* 카카오맵 실시간 경로 확인 */}
                         <div className="flex gap-1.5">
                           <a href={kakaoTransitUrl(item.dong, 'seoul')} target="_blank" rel="noopener noreferrer"
