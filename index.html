@@ -557,7 +557,9 @@ function dabangUrl(aptName, dong) {
       const [isDemoMode, setIsDemoMode] = useState(false);
       const [typeFilter, setTypeFilter] = useState('전체');
       const [minArea, setMinArea] = useState(59); // 기본 59㎡ 이상
-      const [searchRange, setSearchRange] = useState(''); // "2025.01 ~ 2025.06" 형태
+      const [searchRange, setSearchRange] = useState('');
+      const [startYM, setStartYM] = useState('');
+      const [endYM, setEndYM] = useState(''); // "2025.01 ~ 2025.06" 형태
       const [sortOrder, setSortOrder] = useState('recent'); // 'recent' | 'score'
       const handleSaveApiKey = (e) => {
         const val = e.target.value;
@@ -580,7 +582,23 @@ function dabangUrl(aptName, dong) {
       const handleSearch = async () => {
         setLoading(true);
         setError(null);
-        const months = getLast6Months(); // ['202506','202505',...,'202501']
+        let months;
+        if (startYM && endYM) {
+          months = [];
+          const [sy, sm] = startYM.split('-').map(Number);
+          const [ey, em] = endYM.split('-').map(Number);
+          let cd = new Date(ey, em - 1);
+          const stopDate = new Date(sy, sm - 1);
+          while (cd >= stopDate) {
+            const y = cd.getFullYear();
+            const m = String(cd.getMonth() + 1).padStart(2, '0');
+            months.push(`${y}${m}`);
+            cd.setMonth(cd.getMonth() - 1);
+          }
+          if (months.length === 0) months = getLast6Months();
+        } else {
+          months = getLast6Months();
+        }
         const oldest = months[months.length - 1];
         const newest = months[0];
         const rangeLabel = `${oldest.slice(0,4)}.${oldest.slice(4)} ~ ${newest.slice(0,4)}.${newest.slice(4)}`;
@@ -769,15 +787,34 @@ function dabangUrl(aptName, dong) {
                     ))}
                   </select>
                 </div>
-                {/* 조회 범위 표시 */}
+                {/* 조회 범위 입력 */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                    <Calendar size={12} /> 조회 범위
+                    <Calendar size={12} /> 조회 범위 (비우면 최근 6개월 자동)
                   </label>
-                  <div className="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 font-semibold flex items-center gap-1.5">
-                    <span className="text-blue-500">📅</span>
-                    {searchRange || '최근 6개월 자동'}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input
+                      type="month"
+                      value={startYM}
+                      onChange={e => setStartYM(e.target.value)}
+                      max="2026-12"
+                      className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="시작"
+                    />
+                    <input
+                      type="month"
+                      value={endYM}
+                      onChange={e => setEndYM(e.target.value)}
+                      max="2026-12"
+                      className="w-full p-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="종료"
+                    />
                   </div>
+                  {searchRange && (
+                    <div className="text-[10px] text-blue-600 font-semibold flex items-center gap-1 mt-0.5">
+                      📅 현재 적용: {searchRange}
+                    </div>
+                  )}
                 </div>
               </div>
               {/* 전용면적 필터 */}
