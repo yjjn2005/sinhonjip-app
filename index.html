@@ -650,7 +650,6 @@ function dabangUrl(aptName, dong) {
       const [rawByGu, setRawByGu] = useState({}); // { 구코드: [실거래 목록] }
       const [isDemoMode, setIsDemoMode] = useState(false);
       const [typeFilter, setTypeFilter] = useState('전체');
-      const [minArea, setMinArea] = useState(0);
       const [searchRange, setSearchRange] = useState('');
       const [startYM, setStartYM] = useState('');
       const [endYM, setEndYM] = useState('');
@@ -747,31 +746,40 @@ function dabangUrl(aptName, dong) {
           return parseInt(`${y}${m}${d}`) || 0;
         };
         // 교통 편의 점수 (서울역+문정 평균시간 낮을수록 높음)
-        const transitConv = (i) => {
-          const t = getTransit(i.dong);
+        const transitConvD = (dong) => {
+          const t = getTransit(dong);
           return 200 - (t.s + t.m); // 클수록 교통 편리
         };
-        // ★ 교통·전세 우선 정렬 (내림차순): ① 전세 먼저 ② 교통 편리 ③ 최근 거래
-        const transitSort = (a, b) => {
+        // ★ 전용 59㎡형만 (그 외 면적 전부 제외)
+        const is59 = (a) => a >= 54 && a < 66;
+        // 카드 안 실거래 정렬: 전세 우선 → 최근 → 보증금 높은 순
+        const dealSort = (a, b) => {
           const aJ = a.type === '전세' ? 0 : 1;
           const bJ = b.type === '전세' ? 0 : 1;
-          if (aJ !== bJ) return aJ - bJ;                 // 전세 우선
-          const tc = transitConv(b) - transitConv(a);
-          if (tc !== 0) return tc;                        // 교통 편리한 순
-          return dateKey(b) - dateKey(a);                 // 최근순
-        };
-        const recentSort = (a, b) => {
+          if (aJ !== bJ) return aJ - bJ;
           const dd = dateKey(b) - dateKey(a);
           if (dd !== 0) return dd;
-          return transitConv(b) - transitConv(a);
+          return b.deposit - a.deposit;
         };
-        const sorter = sortOrder === 'recent' ? recentSort : transitSort;
+        // ★ 단지(카드) 정렬: ① 전세 있는 단지 ② 교통 편리 ③ 최근 거래
+        const aptSortTransit = (a, b) => {
+          if (a.hasJeonse !== b.hasJeonse) return (b.hasJeonse ? 1 : 0) - (a.hasJeonse ? 1 : 0);
+          const tc = transitConvD(b.dong) - transitConvD(a.dong);
+          if (tc !== 0) return tc;
+          return b.latest - a.latest;
+        };
+        const aptSortRecent = (a, b) => {
+          const d = b.latest - a.latest;
+          if (d !== 0) return d;
+          return transitConvD(b.dong) - transitConvD(a.dong);
+        };
+        const aptSorter = sortOrder === 'recent' ? aptSortRecent : aptSortTransit;
 
         const targetGus = viewGu === '전체'
           ? WATCHLIST_GU
           : WATCHLIST_GU.filter(g => g.code === viewGu);
 
-        let total = 0, deduped = 0, jeonse = 0, monthly = 0;
+        let total = 0, dealTotal = 0, jeonse = 0, monthly = 0, aptTotal = 0;
         const groups = targetGus.map(g => {
           const raw = rawByGu[g.code] || [];
           total += raw.length;
@@ -779,25 +787,43 @@ function dabangUrl(aptName, dong) {
           // 관심 단지 목록이 있으면 그 단지들만 필터링
           const wl = APT_WATCHLIST[g.code];
           if (wl && wl.length) list = list.filter(it => matchWatchlist(it, wl));
-          // 면적 + 전세 7억 이하
-          list = list.filter(i =>
-            i.area >= minArea && (i.type !== '전세' || i.deposit <= 70000)
-          );
-          const guJeonse = list.filter(i => i.type === '전세').length;
-          const guMonthly = list.filter(i => i.type !== '전세').length;
-          deduped += list.length; jeonse += guJeonse; monthly += guMonthly;
+          // 59㎡형 + 전세 7억 이하
+          list = list.filter(i => is59(i.area) && (i.type !== '전세' || i.deposit <= 70000));
           // 유형 필터
-          let shown = typeFilter === '전세'
+          const deals = typeFilter === '전세'
             ? list.filter(i => i.type === '전세')
             : typeFilter === '월세'
             ? list.filter(i => i.type !== '전세')
             : list;
-          shown = [...shown].sort(sorter);
-          return { code: g.code, name: g.name, listings: shown, total: list.length, jeonse: guJeonse, monthly: guMonthly };
+          const guJeonse = deals.filter(i => i.type === '전세').length;
+          const guMonthly = deals.filter(i => i.type !== '전세').length;
+          // ★ 같은 아파트(단지명+동)끼리 묶어 한 카드에 여러 가격 표시
+          const map = new Map();
+          deals.forEach(d => {
+            const key = normalizeName(d.aptName) + '|' + (d.dong || '');
+            if (!map.has(key)) {
+              map.set(key, { aptName: d.aptName, dong: d.dong, buildYear: d.buildYear, deals: [] });
+            }
+            map.get(key).deals.push(d);
+          });
+          const apts = [...map.values()].map(a => {
+            a.deals.sort(dealSort);
+            a.hasJeonse = a.deals.some(d => d.type === '전세');
+            a.latest = Math.max(...a.deals.map(dateKey));
+            a.dealCount = a.deals.reduce((s, d) => s + (d.brokerCount || 1), 0);
+            // 최신 거래의 단지명/년식을 대표로 사용
+            const newest = a.deals.reduce((p, c) => dateKey(c) > dateKey(p) ? c : p, a.deals[0]);
+            a.aptName = newest.aptName;
+            a.buildYear = newest.buildYear || a.buildYear;
+            return a;
+          });
+          apts.sort(aptSorter);
+          dealTotal += deals.length; jeonse += guJeonse; monthly += guMonthly; aptTotal += apts.length;
+          return { code: g.code, name: g.name, apts, aptCount: apts.length, dealCount: deals.length, jeonse: guJeonse, monthly: guMonthly };
         });
-        const shownCount = groups.reduce((s, g) => s + g.listings.length, 0);
-        return { groups, shownCount, stats: { total, deduped, jeonse, monthly } };
-      }, [rawByGu, viewGu, typeFilter, minArea, sortOrder]);
+        const shownCount = groups.reduce((s, g) => s + g.apts.length, 0);
+        return { groups, shownCount, stats: { total, deduped: dealTotal, apts: aptTotal, jeonse, monthly } };
+      }, [rawByGu, viewGu, typeFilter, sortOrder]);
       useEffect(() => {
         handleSearch();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -918,27 +944,13 @@ function dabangUrl(aptName, dong) {
                   )}
                 </div>
               </div>
-              {/* 전용면적 필터 */}
+              {/* 전용면적: 59㎡형 고정 */}
               <div className="mt-3">
                 <label className="text-xs font-semibold text-slate-500 flex items-center gap-1 mb-1.5">
-                  <Building2 size={12} /> 전용면적 (㎡ 이상)
+                  <Building2 size={12} /> 전용면적
                 </label>
-                <div className="flex gap-2">
-                  {[
-                    { label: '전체', val: 0 },
-                    { label: '59㎡~', val: 59 },
-                    { label: '74㎡~', val: 74 },
-                    { label: '84㎡~', val: 84 },
-                  ].map(opt => (
-                    <button key={opt.val} onClick={() => setMinArea(opt.val)}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
-                        minArea === opt.val
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
-                      }`}>
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold">
+                  <Building2 size={14} /> 전용 59㎡형만 표시 (그 외 면적 제외)
                 </div>
               </div>
               {/* 조회 버튼 */}
@@ -965,12 +977,12 @@ function dabangUrl(aptName, dong) {
             {!loading && !error && processedData.shownCount > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <div className="text-xs text-slate-500 mb-1">총 수집 거래</div>
-                  <div className="text-xl font-bold">{processedData.stats.total}건</div>
+                  <div className="text-xs text-slate-500 mb-1">관심 단지 (59㎡형)</div>
+                  <div className="text-xl font-bold">{processedData.stats.apts}개</div>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center shadow-sm">
                   <div className="text-xs text-slate-600 font-medium mb-1 flex items-center justify-center gap-1">
-                    <Layers size={14} /> 관심단지 매물
+                    <Layers size={14} /> 실거래 건수
                   </div>
                   <div className="text-xl font-bold text-slate-800">{processedData.stats.deduped}건</div>
                 </div>
@@ -1025,74 +1037,46 @@ function dabangUrl(aptName, dong) {
                 })}
               </div>
             )}
-            {/* 매물 리스트 — 구별(성동구·은평구·송파구) 섹션 */}
+            {/* 매물 리스트 — 구별(성동구·은평구) 섹션 · 단지별 묶음 (전용 59㎡형) */}
             {!loading && !error && processedData.shownCount > 0 && (
               <div className="space-y-6">
-                {processedData.groups.filter(g => g.listings.length > 0).map(group => (
+                {processedData.groups.filter(g => g.apts.length > 0).map(group => (
                   <section key={group.code}>
                     <div className="flex items-center flex-wrap gap-2 mb-2 mt-1 sticky top-14 bg-slate-50/95 backdrop-blur py-1.5 z-[5]">
                       <span className="text-base font-extrabold text-slate-800">🏙️ {group.name}</span>
-                      <span className="text-xs font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full">{group.listings.length}건</span>
-                      <span className="text-[11px] text-slate-400">전세 {group.jeonse} · 월세 {group.monthly}</span>
+                      <span className="text-xs font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full">{group.aptCount}개 단지</span>
+                      <span className="text-[11px] text-slate-400">실거래 {group.dealCount}건 · 전세 {group.jeonse} · 월세 {group.monthly}</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {group.listings.map((item, idx) => {
-                  const isLoanEligible = checkLoanEligibility(item.deposit);
-                  const rawLoanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
-              const loanAmount = Math.min(rawLoanAmount, 30000);
-              const loanExceeded = rawLoanAmount > 30000;
-                  const monthlyInterest = isLoanEligible ? calcMonthlyInterest(loanAmount) : 0;
-                  const score = smartScore(item);
-                  const transit = getTransit(item.dong);
-                  const isTop = score >= 180; // 전세+이자지원+6억근접 모두 충족
-                  const depositDiff = Math.abs(item.deposit - TARGET_DEPOSIT);
+                {group.apts.map((apt, idx) => {
+                  const transit = getTransit(apt.dong);
+                  const jeonseDeals = apt.deals.filter(d => d.type === '전세');
+                  const minJ = jeonseDeals.length ? Math.min(...jeonseDeals.map(d => d.deposit)) : null;
+                  const maxJ = jeonseDeals.length ? Math.max(...jeonseDeals.map(d => d.deposit)) : null;
+                  const naverUrl = getNaverComplexUrl(apt.aptName);
                   return (
-                    <div key={idx} className={`bg-white rounded-xl border overflow-hidden active:shadow-md transition-shadow flex flex-col ${isTop ? 'border-green-400 ring-2 ring-green-200' : 'border-slate-200'}`}>
+                    <div key={idx} className={`bg-white rounded-xl border overflow-hidden active:shadow-md transition-shadow flex flex-col ${apt.hasJeonse ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'}`}>
+                      {/* 단지 헤더 */}
                       <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-                        <div className="flex justify-between items-center mb-1.5">
-                          <div className="flex items-center gap-1">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
-                              {item.type}
-                            </span>
-                            {isTop && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">🎯 추천</span>}
-                  {getNaverComplexUrl(item.aptName) && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500 text-white">🏠 실매물</span>}
-                            {depositDiff <= 10000 && !isTop && item.type === '전세' && isLoanEligible && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">6억근접</span>
-                            )}
-                          </div>
-                          {item.brokerCount > 1 && (
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 flex items-center gap-0.5">
-                              <Layers size={9} /> {item.brokerCount}건 통합
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-base text-slate-800 truncate" title={item.aptName}>
-                          {item.aptName}
-                        </h3>
-                        <p className="text-xs text-slate-400 flex items-center gap-0.5 mt-0.5">
-                          <MapPin size={11} /> {item.dong}
-                        </p>
-                      </div>
-                      <div className="px-4 py-3 flex-1">
-                        <div className="flex items-baseline gap-1.5 mb-1">
-                          <span className="text-xs text-slate-400">보증금</span>
-                          <span className="text-xl font-extrabold text-slate-900">
-                            {formatPrice(item.deposit)}
+                        <div className="flex justify-between items-center mb-1">
+                          <h3 className="font-extrabold text-base text-slate-800 truncate" title={apt.aptName}>
+                            {apt.aptName}
+                          </h3>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 shrink-0 ml-1">
+                            실거래 {apt.dealCount}건
                           </span>
                         </div>
-                        {item.monthlyRent > 0 && (
-                          <div className="flex items-baseline gap-1.5 mb-2">
-                            <span className="text-xs text-slate-400">월세</span>
-                            <span className="text-base font-bold text-orange-600">{formatPrice(item.monthlyRent)}</span>
+                        <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                          <span className="flex items-center gap-0.5"><MapPin size={11} /> {apt.dong}</span>
+                          <span className="flex items-center gap-0.5"><Building2 size={11} /> 전용 59㎡형</span>
+                          {apt.buildYear && <span className="flex items-center gap-0.5"><Calendar size={11} />{apt.buildYear}년식</span>}
+                        </p>
+                        {minJ !== null && (
+                          <div className="mt-1.5 text-sm font-bold text-indigo-700">
+                            전세 {minJ === maxJ ? formatPrice(minJ) : `${formatPrice(minJ)} ~ ${formatPrice(maxJ)}`}
                           </div>
                         )}
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
-                          <span className="flex items-center gap-1"><Building2 size={12} />{item.area}㎡</span>
-                          <span className="flex items-center gap-1"><Layers size={12} />{item.floor}층</span>
-                          <span className="flex items-center gap-1"><Calendar size={12} />{item.buildYear}년식</span>
-                          <span>계약 {item.dealMonth}.{item.dealDay}</span>
-                        </div>
-                        {/* 대중교통 소요시간 요약 */}
+                        {/* 대중교통 소요시간 */}
                         <div className="flex gap-2 mt-2">
                           <div className={`flex-1 flex items-center justify-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg ${transit.s <= 20 ? 'bg-green-100 text-green-800' : transit.s <= 30 ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
                             🚇 서울역 <span className="text-sm font-extrabold">약 {transit.s}분</span>
@@ -1102,32 +1086,42 @@ function dabangUrl(aptName, dong) {
                           </div>
                         </div>
                       </div>
-                      <div className="px-4 py-2 bg-slate-50 border-t border-slate-100">
-                        {isLoanEligible ? (
-                          <div className="flex flex-col gap-0.5">
-                            <div className="text-xs font-semibold text-green-700 flex items-center gap-1">
-                              <CheckCircle2 size={12} /> 서울시 신혼부부 이자지원 대상
-                            </div>
-                            <div className="text-[11px] text-slate-400 flex justify-between">
-                              <span>대출 80%: {formatPrice(loanAmount)}</span>
-                              <span>월이자 약 {formatInterest(monthlyInterest)}</span>
-                            </div>
-
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-400 text-center py-1">
-                            보증금 7억 초과 (서울시 대출지원 제외)
-                          </div>
-                        )}
+                      {/* 실거래 가격 목록 (같은 단지의 여러 가격) */}
+                      <div className="px-4 py-2 flex-1">
+                        <div className="text-[11px] text-slate-400 font-semibold mb-1">실거래 내역 (최신순)</div>
+                        <ul className="divide-y divide-slate-100">
+                          {apt.deals.map((d, di) => {
+                            const loanOk = d.type === '전세' && d.deposit <= 70000;
+                            return (
+                              <li key={di} className="flex items-center justify-between gap-2 py-1.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${d.type === '전세' ? 'bg-indigo-100 text-indigo-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {d.type}
+                                  </span>
+                                  <span className="font-extrabold text-slate-900 text-sm">{formatPrice(d.deposit)}</span>
+                                  {d.monthlyRent > 0 && (
+                                    <span className="text-orange-600 font-bold text-xs">/{formatPrice(d.monthlyRent)}</span>
+                                  )}
+                                  {loanOk && <span title="서울시 신혼부부 이자지원 대상" className="text-green-600"><CheckCircle2 size={12} /></span>}
+                                </div>
+                                <div className="flex items-center gap-2 text-[11px] text-slate-400 shrink-0">
+                                  <span>{d.floor}층</span>
+                                  <span>{String(d.dealYear || '').slice(2)}.{d.dealMonth}.{d.dealDay}</span>
+                                  {d.brokerCount > 1 && (
+                                    <span title="동일 가격 거래 건수" className="px-1 rounded bg-slate-100 text-slate-500">×{d.brokerCount}</span>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       </div>
-                      {/* 매물 검색 + 교통 버튼 */}
-                      <div className="px-3 pb-3 pt-2 flex flex-col gap-2">
-                        {getNaverComplexUrl(item.aptName) && (
-                          <a href={getNaverComplexUrl(item.aptName)} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center justify-center gap-1 py-1.5 bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white rounded-lg text-[11px] font-bold transition-colors shadow-sm mt-1">
-                            🏠 네이버 부동산에서 보기
-                          </a>
-                        )}
+                      {/* 네이버 부동산 링크 */}
+                      <div className="px-3 pb-3 pt-1">
+                        <a href={naverUrl || naverLandUrl(apt.aptName, apt.dong)} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1 py-1.5 bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white rounded-lg text-[11px] font-bold transition-colors shadow-sm">
+                          🏠 네이버 부동산에서 현재 매물 보기
+                        </a>
                       </div>
                     </div>
                   );
