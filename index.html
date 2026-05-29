@@ -48,15 +48,53 @@
     // ==========================================
     // 2. 코어 데이터 및 로직
     // ==========================================
+    // ★ 관심 자치구만 유지: 성동구 · 은평구
     const SEOUL_GU = {
-      '강남구': '11680', '강동구': '11740', '강북구': '11305', '강서구': '11500',
-      '관악구': '11620', '광진구': '11215', '구로구': '11530', '금천구': '11545',
-      '노원구': '11350', '도봉구': '11320', '동대문구': '11230', '동작구': '11590',
-      '마포구': '11440', '서대문구': '11410', '서초구': '11650', '성동구': '11200',
-      '성북구': '11290', '송파구': '11710', '양천구': '11470', '영등포구': '11560',
-      '용산구': '11170', '은평구': '11380', '종로구': '11110', '중구': '11140',
-      '중랑구': '11260',
+      '성동구': '11200', '은평구': '11380',
     };
+
+    // 화면에 표시할 관심 자치구 순서 (성동구 → 은평구)
+    const WATCHLIST_GU = [
+      { code: '11200', name: '성동구' },
+      { code: '11380', name: '은평구' },
+    ];
+
+    // ★ 관심 단지 목록 — 이 단지들만 골라서 보여줍니다 (구별)
+    //   keys: 실거래가 단지명에 포함되면 매칭 / dong: 동 이름으로 한 번 더 좁힘
+    const APT_WATCHLIST = {
+      '11200': [ // 성동구
+        { name: '행당대림아파트',    dong: '행당동',   keys: ['행당대림', '대림'] },
+        { name: '행당신동아아파트',  dong: '행당동',   keys: ['신동아'] },
+        { name: '응봉대림2차아파트', dong: '응봉동',   keys: ['대림2차', '대림'] },
+        { name: '응봉현대아파트',    dong: '응봉동',   keys: ['현대'] },
+        { name: '금호동벽산아파트',  dong: '금호동',   keys: ['벽산'] },
+        { name: '응봉신동아아파트',  dong: '응봉동',   keys: ['신동아'] },
+        { name: '왕십리삼성아파트',  dong: '하왕십리동', keys: ['삼성'] },
+      ],
+      '11380': [ // 은평구 (녹번 + 응암동 스크린샷 단지)
+        { name: '녹번아파트',              dong: '녹번동', keys: ['녹번'] },
+        { name: '녹번역e편한세상캐슬',     dong: '녹번동', keys: ['e편한세상', '이편한세상', '캐슬'] },
+        { name: '백련산SK뷰아이파크',      dong: '응암동', keys: ['백련산', 'sk', '아이파크'] },
+        { name: '백련산현대힐스테이트3차', dong: '응암동', keys: ['백련산', '힐스테이트'] },
+        { name: '래미안베라힐즈',          dong: '응암동', keys: ['래미안', '베라힐즈'] },
+      ],
+      // 송파구는 별도 관심단지 지정 없음 → 전체 표시
+    };
+
+    function normalizeName(s) {
+      return (s || '').replace(/아파트/g, '').replace(/단지/g, '')
+        .replace(/[\s·.,()\[\]\-]/g, '').toLowerCase();
+    }
+    // 단지가 관심목록(watchlist)에 포함되는지 판정
+    function matchWatchlist(item, wl) {
+      const an = normalizeName(item.aptName);
+      const dn = (item.dong || '');
+      return wl.some(w => {
+        const dongOk = !w.dong || dn.includes(w.dong.replace(/동$/, ''));
+        if (!dongOk) return false;
+        return w.keys.some(k => an.includes(normalizeName(k)));
+      });
+    }
     function isInvalidKey(key) {
       return !key || key.trim() === '' || key === 'DEMO_KEY' || key === '여기에_발급받은_API_키를_입력하세요';
     }
@@ -179,7 +217,51 @@
       const annualRate = 0.0295;
       return Math.round(loanAmount * annualRate / 12);
     }
+    // ★ 관심 단지별 실거래가 샘플 (전세 위주, 만원 단위)
+    //   deals: [전용면적㎡, 보증금(만), 월세(만)]  — 월세 0이면 전세
+    const CURATED_APTS = {
+      '11200': [ // 성동구
+        { name: '행당대림아파트',    dong: '행당동',   build: '1998', deals: [[84.9,66000,0],[84.9,68000,0],[59.8,50000,0],[114.7,79000,0],[84.9,38000,90]] },
+        { name: '행당신동아아파트',  dong: '행당동',   build: '2001', deals: [[84.6,63000,0],[59.9,49000,0],[84.6,65000,0],[114.5,77000,0]] },
+        { name: '응봉대림2차아파트', dong: '응봉동',   build: '1995', deals: [[84.9,57000,0],[59.9,46000,0],[84.9,59000,0],[114.8,69000,0]] },
+        { name: '응봉현대아파트',    dong: '응봉동',   build: '1997', deals: [[84.8,55000,0],[59.8,44000,0],[84.8,57000,0]] },
+        { name: '금호동벽산아파트',  dong: '금호동',   build: '2001', deals: [[84.9,68000,0],[114.9,82000,0],[59.9,55000,0],[84.9,42000,100]] },
+        { name: '응봉신동아아파트',  dong: '응봉동',   build: '1996', deals: [[84.7,53000,0],[59.9,43000,0],[84.7,55000,0]] },
+        { name: '왕십리삼성아파트',  dong: '하왕십리동', build: '1999', deals: [[84.9,67000,0],[59.9,53000,0],[114.8,80000,0],[84.9,40000,95]] },
+      ],
+      '11380': [ // 은평구
+        { name: '녹번아파트',              dong: '녹번동', build: '1998', deals: [[84.9,52000,0],[59.9,43000,0],[84.9,54000,0]] },
+        { name: '녹번역e편한세상캐슬',     dong: '녹번동', build: '2020', deals: [[84.9,66000,0],[59.9,53000,0],[84.9,68000,0],[59.9,40000,80]] },
+        { name: '백련산SK뷰아이파크',      dong: '응암동', build: '2011', deals: [[84.9,51000,0],[59.9,44000,0],[84.9,53000,0],[114.9,62000,0]] },
+        { name: '백련산현대힐스테이트3차', dong: '응암동', build: '2011', deals: [[84.9,54000,0],[59.9,46000,0],[84.9,56000,0]] },
+        { name: '래미안베라힐즈',          dong: '응암동', build: '2019', deals: [[84.9,62000,0],[59.9,50000,0],[84.9,64000,0],[114.9,73000,0]] },
+      ],
+    };
+
     function getDemoData(lawdCd, dealYmd) {
+      // 관심 단지가 지정된 구는 큐레이션 실거래가 사용
+      const curated = CURATED_APTS[lawdCd];
+      if (curated) {
+        const baseY = parseInt(dealYmd.substring(0, 4)) || 2026;
+        const baseM = parseInt(dealYmd.substring(4, 6)) || 5;
+        const out = [];
+        curated.forEach((apt, ai) => {
+          apt.deals.forEach((d, i) => {
+            let y = baseY, m = baseM - ((i + ai) % 6);
+            while (m <= 0) { m += 12; y -= 1; }
+            const [area, deposit, monthly] = d;
+            out.push({
+              aptName: apt.name, dong: apt.dong, area, deposit, monthlyRent: monthly,
+              floor: String(((i * 7 + Math.round(area)) % 18) + 2),
+              buildYear: apt.build,
+              dealYear: String(y), dealMonth: String(m).padStart(2, '0'),
+              dealDay: String(((i * 9 + 11) % 27) + 1).padStart(2, '0'),
+              type: monthly > 0 ? '월세' : '전세',
+            });
+          });
+        });
+        return out;
+      }
       const DEMO_APT_NAMES = {
         '11680': [ // 강남구
           { name: '역삼래미안', dong: '역삼동' }, { name: '래미안그레이튼', dong: '역삼동' },
@@ -446,8 +528,9 @@
       '상계':{ s:35, m:45 }, '중계':{ s:32, m:42 }, '하계':{ s:30, m:38 },
       '월계':{ s:28, m:38 },
       // 은평구
-      '은평':{ s:22, m:42 }, '녹번':{ s:22, m:42 }, '불광':{ s:25, m:45 },
-      '갈현':{ s:28, m:45 }, '수색':{ s:30, m:50 },
+      '은평':{ s:22, m:42 }, '녹번':{ s:18, m:40 }, '불광':{ s:25, m:45 },
+      '갈현':{ s:28, m:45 }, '수색':{ s:30, m:50 }, '응암':{ s:24, m:46 },
+      '역촌':{ s:24, m:46 }, '신사':{ s:28, m:50 }, '대조':{ s:23, m:45 },
       // 종로구
       '종로':{ s:10, m:25 }, '창신':{ s:12, m:22 }, '숭인':{ s:12, m:22 },
       '혜화':{ s:15, m:25 },
@@ -561,17 +644,17 @@ function dabangUrl(aptName, dong) {
 
       const [showSettings, setShowSettings] = useState(false);
 
-      const [selectedGu, setSelectedGu] = useState('11200'); // 성동구 기본값
+      const [viewGu, setViewGu] = useState('전체'); // '전체' | 구코드
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
-      const [originalListings, setOriginalListings] = useState([]);
+      const [rawByGu, setRawByGu] = useState({}); // { 구코드: [실거래 목록] }
       const [isDemoMode, setIsDemoMode] = useState(false);
       const [typeFilter, setTypeFilter] = useState('전체');
-      const [minArea, setMinArea] = useState(59); // 기본 59㎡ 이상
+      const [minArea, setMinArea] = useState(0);
       const [searchRange, setSearchRange] = useState('');
       const [startYM, setStartYM] = useState('');
-      const [endYM, setEndYM] = useState(''); // "2025.01 ~ 2025.06" 형태
-      const [sortOrder, setSortOrder] = useState('recent'); // 'recent' | 'score'
+      const [endYM, setEndYM] = useState('');
+      const [sortOrder, setSortOrder] = useState('transit'); // 'transit'(교통·전세 우선) | 'recent'
       const handleSaveApiKey = (e) => {
         const val = e.target.value;
         setApiKey(val);
@@ -614,109 +697,107 @@ function dabangUrl(aptName, dong) {
         const newest = months[0];
         const rangeLabel = `${oldest.slice(0,4)}.${oldest.slice(4)} ~ ${newest.slice(0,4)}.${newest.slice(4)}`;
         setSearchRange(rangeLabel);
+        // 관심 자치구(성동·은평·송파) 전체를 한 번에 조회
         try {
-          if (isInvalidKey(apiKey)) {
-            setIsDemoMode(true);
-            setOriginalListings(getDemoData(selectedGu, newest));
-          } else {
-            setIsDemoMode(false);
-            try {
-              // 최근 6개월 병렬 조회
-              const results = await Promise.allSettled(
-                months.map(m => fetchAptRent(selectedGu, m, apiKey))
-              );
-              const allData = [];
-              results.forEach(r => {
-                if (r.status === 'fulfilled' && Array.isArray(r.value)) {
-                  allData.push(...r.value);
+          const next = {};
+          let demoUsed = false;
+          for (const { code } of WATCHLIST_GU) {
+            let data = [];
+            if (isInvalidKey(apiKey)) {
+              data = getDemoData(code, newest);
+              demoUsed = true;
+            } else {
+              try {
+                const results = await Promise.allSettled(
+                  months.map(m => fetchAptRent(code, m, apiKey))
+                );
+                const allData = [];
+                results.forEach(r => {
+                  if (r.status === 'fulfilled' && Array.isArray(r.value)) allData.push(...r.value);
+                });
+                if (allData.length > 0) {
+                  data = allData;
+                } else {
+                  data = getDemoData(code, newest);
+                  demoUsed = true;
                 }
-              });
-              if (allData.length > 0) {
-                setOriginalListings(allData);
-              } else {
-                // 데이터 없으면 데모 데이터로 표시
-                setIsDemoMode(true);
-                setOriginalListings(getDemoData(selectedGu, newest));
+              } catch (apiErr) {
+                console.warn('API 오류, 데모 데이터로 전환:', apiErr.message);
+                data = getDemoData(code, newest);
+                demoUsed = true;
               }
-            } catch (apiErr) {
-              // CORS/API 오류 시 데모 데이터로 자동 폴백
-              console.warn('API 오류, 데모 데이터로 전환:', apiErr.message);
-              setIsDemoMode(true);
-              setOriginalListings(getDemoData(selectedGu, newest));
             }
+            next[code] = data;
           }
+          setIsDemoMode(demoUsed);
+          setRawByGu(next);
         } catch (err) {
           setError(err.message);
-          setOriginalListings([]);
+          setRawByGu({});
         } finally {
           setLoading(false);
         }
       };
       const processedData = useMemo(() => {
-        if (!originalListings || originalListings.length === 0) return { listings: [], stats: {} };
-
-        const deduped = deduplicateListings(originalListings);
-
-        // 날짜 비교용 정수값 계산 (YYYYMMDD)
+        // 날짜 비교용 정수값 (YYYYMMDD)
         const dateKey = (i) => {
           const y = String(i.dealYear || '0');
           const m = String(i.dealMonth || '00').padStart(2, '0');
           const d = String(i.dealDay || '00').padStart(2, '0');
           return parseInt(`${y}${m}${d}`) || 0;
         };
-
-        if (sortOrder === 'recent') {
-          // 최근순 내림차순 (거래일 최신 → 오래된 순)
-          deduped.sort((a, b) => {
-            // 실매물 확인 단지 최우선
-            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
-            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
-            if (aHas !== bHas) return bHas - aHas;
-            const dateDiff = dateKey(b) - dateKey(a);
-            if (dateDiff !== 0) return dateDiff;
-            return smartScore(b) - smartScore(a); // 같은 날짜면 추천점수순
-          });
-        } else {
-          // 추천 우선순위 정렬: ①전세 ②6억근접 ③이자지원 ④교통
-          deduped.sort((a, b) => {
-            // 실매물 확인 단지 최우선
-            const aHas = getNaverComplexUrl(a.aptName) ? 1 : 0;
-            const bHas = getNaverComplexUrl(b.aptName) ? 1 : 0;
-            if (aHas !== bHas) return bHas - aHas;
-            const diff = smartScore(b) - smartScore(a);
-            if (diff !== 0) return diff;
-            return Math.abs(a.deposit - TARGET_DEPOSIT) - Math.abs(b.deposit - TARGET_DEPOSIT);
-          });
-        }
-
-        const isTopItem = (i) => smartScore(i) >= 180;
-
-        // 면적 필터 + 보증금 7억 이하 (전세 기준 서울시 이자지원 한도)
-        const areaFiltered = deduped.filter(i =>
-          i.area >= minArea &&
-          (i.type !== '전세' || i.deposit <= 70000)  // 전세는 7억 이하만, 월세는 보증금 무관
-        );
-
-        const filtered = typeFilter === '추천'
-          ? areaFiltered.filter(isTopItem)
-          : typeFilter === '전세'
-          ? areaFiltered.filter(i => i.type === '전세')
-          : typeFilter === '월세'
-          ? areaFiltered.filter(i => i.type !== '전세')
-          : areaFiltered; // 전체
-
-        const topCount = areaFiltered.filter(isTopItem).length;
-        const stats = {
-          total: originalListings.length,
-          deduped: areaFiltered.length,
-          removed: originalListings.length - areaFiltered.length,
-          topCount,
-          jeonse: areaFiltered.filter(i => i.type === '전세').length,
-          monthly: areaFiltered.filter(i => i.type !== '전세').length,
-          near6Uk: topCount,
+        // 교통 편의 점수 (서울역+문정 평균시간 낮을수록 높음)
+        const transitConv = (i) => {
+          const t = getTransit(i.dong);
+          return 200 - (t.s + t.m); // 클수록 교통 편리
         };
-        return { listings: filtered, stats };
-      }, [originalListings, typeFilter, minArea, sortOrder]);
+        // ★ 교통·전세 우선 정렬 (내림차순): ① 전세 먼저 ② 교통 편리 ③ 최근 거래
+        const transitSort = (a, b) => {
+          const aJ = a.type === '전세' ? 0 : 1;
+          const bJ = b.type === '전세' ? 0 : 1;
+          if (aJ !== bJ) return aJ - bJ;                 // 전세 우선
+          const tc = transitConv(b) - transitConv(a);
+          if (tc !== 0) return tc;                        // 교통 편리한 순
+          return dateKey(b) - dateKey(a);                 // 최근순
+        };
+        const recentSort = (a, b) => {
+          const dd = dateKey(b) - dateKey(a);
+          if (dd !== 0) return dd;
+          return transitConv(b) - transitConv(a);
+        };
+        const sorter = sortOrder === 'recent' ? recentSort : transitSort;
+
+        const targetGus = viewGu === '전체'
+          ? WATCHLIST_GU
+          : WATCHLIST_GU.filter(g => g.code === viewGu);
+
+        let total = 0, deduped = 0, jeonse = 0, monthly = 0;
+        const groups = targetGus.map(g => {
+          const raw = rawByGu[g.code] || [];
+          total += raw.length;
+          let list = deduplicateListings(raw);
+          // 관심 단지 목록이 있으면 그 단지들만 필터링
+          const wl = APT_WATCHLIST[g.code];
+          if (wl && wl.length) list = list.filter(it => matchWatchlist(it, wl));
+          // 면적 + 전세 7억 이하
+          list = list.filter(i =>
+            i.area >= minArea && (i.type !== '전세' || i.deposit <= 70000)
+          );
+          const guJeonse = list.filter(i => i.type === '전세').length;
+          const guMonthly = list.filter(i => i.type !== '전세').length;
+          deduped += list.length; jeonse += guJeonse; monthly += guMonthly;
+          // 유형 필터
+          let shown = typeFilter === '전세'
+            ? list.filter(i => i.type === '전세')
+            : typeFilter === '월세'
+            ? list.filter(i => i.type !== '전세')
+            : list;
+          shown = [...shown].sort(sorter);
+          return { code: g.code, name: g.name, listings: shown, total: list.length, jeonse: guJeonse, monthly: guMonthly };
+        });
+        const shownCount = groups.reduce((s, g) => s + g.listings.length, 0);
+        return { groups, shownCount, stats: { total, deduped, jeonse, monthly } };
+      }, [rawByGu, viewGu, typeFilter, minArea, sortOrder]);
       useEffect(() => {
         handleSearch();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -755,7 +836,7 @@ function dabangUrl(aptName, dong) {
           </header>
           <main className="max-w-5xl mx-auto px-3 pt-4 space-y-4">
             {/* 데이터 출처 안내 (항상 표시) */}
-            {!loading && processedData.listings.length > 0 && (
+            {!loading && processedData.shownCount > 0 && (
               <div className={`px-4 py-2.5 rounded-xl text-xs flex items-start gap-2 border ${isDemoMode ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-blue-50 border-blue-200 text-blue-800'}`}>
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
@@ -797,12 +878,13 @@ function dabangUrl(aptName, dong) {
                     <MapPin size={12} /> 자치구
                   </label>
                   <select
-                    value={selectedGu}
-                    onChange={(e) => setSelectedGu(e.target.value)}
+                    value={viewGu}
+                    onChange={(e) => setViewGu(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    {Object.entries(SEOUL_GU).map(([guName, code]) => (
-                      <option key={code} value={code}>{guName}</option>
+                    <option value="전체">전체 (성동·은평)</option>
+                    {WATCHLIST_GU.map(g => (
+                      <option key={g.code} value={g.code}>{g.name}</option>
                     ))}
                   </select>
                 </div>
@@ -880,45 +962,42 @@ function dabangUrl(aptName, dong) {
               </div>
             )}
             {/* 결과 요약 */}
-            {!loading && !error && processedData.listings.length > 0 && (
+            {!loading && !error && processedData.shownCount > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <div className="text-xs text-slate-500 mb-1">총 수집 매물</div>
+                  <div className="text-xs text-slate-500 mb-1">총 수집 거래</div>
                   <div className="text-xl font-bold">{processedData.stats.total}건</div>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center shadow-sm">
-                  <div className="text-xs text-blue-600 font-medium mb-1 flex items-center justify-center gap-1">
-                    <Layers size={14} /> 중복 제거됨
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center shadow-sm">
+                  <div className="text-xs text-slate-600 font-medium mb-1 flex items-center justify-center gap-1">
+                    <Layers size={14} /> 관심단지 매물
                   </div>
-                  <div className="text-xl font-bold text-blue-700">-{processedData.stats.removed}건</div>
+                  <div className="text-xl font-bold text-slate-800">{processedData.stats.deduped}건</div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm">
-                  <div className="text-xs text-slate-500 mb-1">최종 고유 매물</div>
-                  <div className="text-xl font-bold">{processedData.stats.deduped}건</div>
+                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-center shadow-sm">
+                  <div className="text-xs text-indigo-600 font-medium mb-1">🔑 전세</div>
+                  <div className="text-xl font-bold text-indigo-700">{processedData.stats.jeonse}건</div>
                 </div>
-                <button
-                  onClick={() => setTypeFilter('추천')}
-                  className={`p-4 rounded-xl border text-center shadow-sm transition-all ${typeFilter === '추천' ? 'bg-green-500 border-green-500' : 'bg-green-50 border-green-200 hover:bg-green-100'}`}
-                >
-                  <div className={`text-xs font-bold mb-1 ${typeFilter === '추천' ? 'text-white' : 'text-green-700'}`}>🎯 최우선 추천</div>
-                  <div className={`text-xl font-bold ${typeFilter === '추천' ? 'text-white' : 'text-green-800'}`}>{processedData.stats.topCount}건</div>
-                </button>
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 text-center shadow-sm">
+                  <div className="text-xs text-orange-600 font-medium mb-1">🏷️ 월세</div>
+                  <div className="text-xl font-bold text-orange-700">{processedData.stats.monthly}건</div>
+                </div>
               </div>
             )}
             {/* 정렬 토글 */}
             {!loading && !error && processedData.stats.deduped > 0 && (
               <div className="flex gap-2 justify-end">
                 <button
+                  onClick={() => setSortOrder('transit')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${sortOrder === 'transit' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'}`}
+                >
+                  🚇 교통·전세순
+                </button>
+                <button
                   onClick={() => setSortOrder('recent')}
                   className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${sortOrder === 'recent' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'}`}
                 >
                   📅 최근순
-                </button>
-                <button
-                  onClick={() => setSortOrder('score')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${sortOrder === 'score' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-500 border-slate-300 hover:bg-slate-50'}`}
-                >
-                  🎯 추천순
                 </button>
               </div>
             )}
@@ -946,10 +1025,18 @@ function dabangUrl(aptName, dong) {
                 })}
               </div>
             )}
-            {/* 매물 리스트 */}
-            {!loading && !error && processedData.listings.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {processedData.listings.map((item, idx) => {
+            {/* 매물 리스트 — 구별(성동구·은평구·송파구) 섹션 */}
+            {!loading && !error && processedData.shownCount > 0 && (
+              <div className="space-y-6">
+                {processedData.groups.filter(g => g.listings.length > 0).map(group => (
+                  <section key={group.code}>
+                    <div className="flex items-center flex-wrap gap-2 mb-2 mt-1 sticky top-14 bg-slate-50/95 backdrop-blur py-1.5 z-[5]">
+                      <span className="text-base font-extrabold text-slate-800">🏙️ {group.name}</span>
+                      <span className="text-xs font-bold text-white bg-blue-600 px-2 py-0.5 rounded-full">{group.listings.length}건</span>
+                      <span className="text-[11px] text-slate-400">전세 {group.jeonse} · 월세 {group.monthly}</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {group.listings.map((item, idx) => {
                   const isLoanEligible = checkLoanEligibility(item.deposit);
                   const rawLoanAmount = isLoanEligible ? item.deposit * 0.8 : 0;
               const loanAmount = Math.min(rawLoanAmount, 30000);
@@ -1045,20 +1132,23 @@ function dabangUrl(aptName, dong) {
                     </div>
                   );
                 })}
+                    </div>
+                  </section>
+                ))}
               </div>
             )}
-            {!loading && !error && processedData.listings.length === 0 && (
+            {!loading && !error && processedData.shownCount === 0 && (
               <div className="text-center py-16 text-slate-500 bg-white rounded-xl border border-slate-200">
                 <Building2 size={40} className="mx-auto text-slate-300 mb-3" />
-                <p className="font-medium">최근 6개월 실거래 내역이 없습니다.</p>
-                <p className="text-sm mt-1 text-slate-400">다른 자치구 또는 면적 조건을 조정해보세요.</p>
+                <p className="font-medium">조건에 맞는 관심단지 실거래 내역이 없습니다.</p>
+                <p className="text-sm mt-1 text-slate-400">자치구·면적·유형 조건을 조정해보세요.</p>
               </div>
             )}
             {loading && (
               <div className="text-center py-16">
                 <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm text-slate-500 font-semibold">최근 6개월 실거래 데이터 조회 중...</p>
-                <p className="text-xs text-slate-400 mt-1">국토교통부 API 6회 병렬 호출 중입니다</p>
+                <p className="text-sm text-slate-500 font-semibold">관심 자치구 실거래 데이터 조회 중...</p>
+                <p className="text-xs text-slate-400 mt-1">성동구·은평구 국토교통부 데이터 조회 중입니다</p>
               </div>
             )}
           </main>
