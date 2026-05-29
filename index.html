@@ -62,21 +62,21 @@
     // ★ 관심 단지 목록 — 사용자가 지정한 단지만 정확히 표시 (별칭 + 실거래 등록명·동)
     //   names: 국토부 실거래 등록명(정규화 후 정확 일치) / dong: 동으로 한 번 더 확정 / alias: 화면에 보일 익숙한 이름
     const APT_WATCHLIST = {
-      '11200': [ // 성동구
-        { alias: '행당대림',   names: ['대림e편한세상'],     dong: '행당동' },
-        { alias: '행당신동아', names: ['신동아'],            dong: '행당동' },
-        { alias: '응봉대림2차', names: ['대림2차'],          dong: '응봉동' },
-        { alias: '응봉현대',   names: ['금호현대'],          dong: '응봉동' },
-        { alias: '금호동벽산', names: ['벽산'],              dong: '금호동' },
-        { alias: '응봉신동아', names: ['신동아'],            dong: '응봉동' },
-        { alias: '왕십리삼성', names: ['왕십리삼성'],        dong: '마장동' },
+      '11200': [ // 성동구 (gu=서울 성동구)
+        { alias: '행당대림',   names: ['대림e편한세상'],     dong: '행당동',   hjd: '행당제2동' },
+        { alias: '행당신동아', names: ['신동아'],            dong: '행당동',   hjd: '행당제2동' },
+        { alias: '응봉대림2차', names: ['대림2차'],          dong: '응봉동',   hjd: '응봉동' },
+        { alias: '응봉현대',   names: ['금호현대'],          dong: '응봉동',   hjd: '응봉동' },
+        { alias: '금호동벽산', names: ['벽산'],              dong: '금호동',   hjd: '금호1가동' },
+        { alias: '응봉신동아', names: ['신동아'],            dong: '응봉동',   hjd: '응봉동' },
+        { alias: '왕십리삼성', names: ['왕십리삼성'],        dong: '마장동',   hjd: '마장동' },
       ],
       '11380': [ // 은평구 (녹번 + 응암동 스크린샷 단지)
-        { alias: '녹번현대',           names: ['녹번현대', '녹번2현대'],       dong: '녹번동' },
-        { alias: '녹번역e편한세상캐슬', names: ['녹번역e편한세상캐슬'],         dong: '응암동' },
-        { alias: '백련산SK뷰아이파크',  names: ['백련산에스케이뷰아이파크'],    dong: '응암동' },
-        { alias: '백련산힐스3차',       names: ['백련산힐스테이트3차'],         dong: '응암동' },
-        { alias: '래미안베라힐즈',      names: ['래미안베라힐즈'],             dong: '녹번동' },
+        { alias: '녹번현대',           names: ['녹번현대', '녹번2현대'],       dong: '녹번동', hjd: '녹번동' },
+        { alias: '녹번역e편한세상캐슬', names: ['녹번역e편한세상캐슬'],         dong: '응암동', hjd: '응암제2동' },
+        { alias: '백련산SK뷰아이파크',  names: ['백련산에스케이뷰아이파크'],    dong: '응암동', hjd: '응암제2동' },
+        { alias: '백련산힐스3차',       names: ['백련산힐스테이트3차'],         dong: '응암동', hjd: '응암제2동' },
+        { alias: '래미안베라힐즈',      names: ['래미안베라힐즈'],             dong: '녹번동', hjd: '녹번동' },
       ],
     };
 
@@ -84,20 +84,20 @@
       return (s || '').replace(/아파트/g, '').replace(/단지/g, '')
         .replace(/[\s·.,()\[\]\-]/g, '').toLowerCase();
     }
-    // 단지가 관심목록에 정확히 들어가면 사용자 별칭을 반환, 아니면 null
-    function findAlias(item, wl) {
+    // 단지가 관심목록에 정확히 들어가면 해당 항목(별칭·행정동)을 반환, 아니면 null
+    function findWatch(item, wl) {
       if (!wl) return null;
       const an = normalizeName(item.aptName);
       const dn = (item.dong || '');
       for (const w of wl) {
         const dongOk = !w.dong || dn.includes(w.dong.replace(/동$/, ''));
         if (!dongOk) continue;
-        if (w.names.some(n => an === normalizeName(n))) return w.alias;
+        if (w.names.some(n => an === normalizeName(n))) return w;
       }
       return null;
     }
     function matchWatchlist(item, wl) {
-      return !!findAlias(item, wl);
+      return !!findWatch(item, wl);
     }
     function isInvalidKey(key) {
       return !key || key.trim() === '' || key === 'DEMO_KEY' || key === '여기에_발급받은_API_키를_입력하세요';
@@ -155,11 +155,12 @@
           const el = item.getElementsByTagName(tag)[0];
           return el ? el.textContent.trim() : '';
         };
-        // API 응답은 영문 태그명 사용: aptNm, umdNm, excluUseAr, deposit, monthlyRent, floor, buildYear, dealYear, dealMonth, dealDay
+        // API 응답은 영문 태그명 사용: aptNm, umdNm, jibun, excluUseAr, deposit, monthlyRent, floor, buildYear, dealYear, dealMonth, dealDay
         const rent = parseInt((get('monthlyRent') || '0').replace(/,/g, '')) || 0;
         result.push({
           aptName: get('aptNm'),
           dong: get('umdNm'),
+          jibun: get('jibun'),
           area: parseFloat(get('excluUseAr') || '0') || 0,
           deposit: parseInt((get('deposit') || '0').replace(/,/g, '')) || 0,
           monthlyRent: rent,
@@ -221,24 +222,24 @@
       const annualRate = 0.0295;
       return Math.round(loanAmount * annualRate / 12);
     }
-    // ★ 관심 단지별 실거래가 샘플 (전세 위주, 만원 단위)
+    // ★ 관심 단지별 실거래가 샘플 (실거래 등록명·동·지번 기준, 만원 단위)
     //   deals: [전용면적㎡, 보증금(만), 월세(만)]  — 월세 0이면 전세
     const CURATED_APTS = {
       '11200': [ // 성동구
-        { name: '행당대림아파트',    dong: '행당동',   build: '1998', deals: [[84.9,66000,0],[84.9,68000,0],[59.8,50000,0],[114.7,79000,0],[84.9,38000,90]] },
-        { name: '행당신동아아파트',  dong: '행당동',   build: '2001', deals: [[84.6,63000,0],[59.9,49000,0],[84.6,65000,0],[114.5,77000,0]] },
-        { name: '응봉대림2차아파트', dong: '응봉동',   build: '1995', deals: [[84.9,57000,0],[59.9,46000,0],[84.9,59000,0],[114.8,69000,0]] },
-        { name: '응봉현대아파트',    dong: '응봉동',   build: '1997', deals: [[84.8,55000,0],[59.8,44000,0],[84.8,57000,0]] },
-        { name: '금호동벽산아파트',  dong: '금호동',   build: '2001', deals: [[84.9,68000,0],[114.9,82000,0],[59.9,55000,0],[84.9,42000,100]] },
-        { name: '응봉신동아아파트',  dong: '응봉동',   build: '1996', deals: [[84.7,53000,0],[59.9,43000,0],[84.7,55000,0]] },
-        { name: '왕십리삼성아파트',  dong: '하왕십리동', build: '1999', deals: [[84.9,67000,0],[59.9,53000,0],[114.8,80000,0],[84.9,40000,95]] },
+        { name: '대림e-편한세상',   dong: '행당동',   jibun: '347',    build: '2000', deals: [[59.8,50000,0],[59.8,52000,0],[84.9,66000,0],[59.8,38000,90]] },
+        { name: '신동아',           dong: '행당동',   jibun: '344',    build: '2001', deals: [[59.9,49000,0],[59.9,51000,0],[84.6,64000,0]] },
+        { name: '대림(2차)',        dong: '응봉동',   jibun: '97',     build: '1995', deals: [[59.9,46000,0],[59.9,48000,0],[84.9,58000,0]] },
+        { name: '금호현대',         dong: '응봉동',   jibun: '98',     build: '1997', deals: [[59.8,44000,0],[59.8,46000,0],[80.0,55000,0]] },
+        { name: '벽산',             dong: '금호동1가', jibun: '633',   build: '2001', deals: [[59.9,55000,0],[59.9,57000,0],[84.9,68000,0]] },
+        { name: '신동아',           dong: '응봉동',   jibun: '275',    build: '1996', deals: [[59.9,43000,0],[59.9,45000,0],[84.7,54000,0]] },
+        { name: '왕십리삼성아파트', dong: '마장동',   jibun: '817',    build: '1999', deals: [[59.9,53000,0],[59.9,55000,0],[84.9,67000,0]] },
       ],
       '11380': [ // 은평구
-        { name: '녹번아파트',              dong: '녹번동', build: '1998', deals: [[84.9,52000,0],[59.9,43000,0],[84.9,54000,0]] },
-        { name: '녹번역e편한세상캐슬',     dong: '녹번동', build: '2020', deals: [[84.9,66000,0],[59.9,53000,0],[84.9,68000,0],[59.9,40000,80]] },
-        { name: '백련산SK뷰아이파크',      dong: '응암동', build: '2011', deals: [[84.9,51000,0],[59.9,44000,0],[84.9,53000,0],[114.9,62000,0]] },
-        { name: '백련산현대힐스테이트3차', dong: '응암동', build: '2011', deals: [[84.9,54000,0],[59.9,46000,0],[84.9,56000,0]] },
-        { name: '래미안베라힐즈',          dong: '응암동', build: '2019', deals: [[84.9,62000,0],[59.9,50000,0],[84.9,64000,0],[114.9,73000,0]] },
+        { name: '녹번현대아파트',          dong: '녹번동', jibun: '100-55', build: '1989', deals: [[59.9,29000,0],[59.9,30000,0]] },
+        { name: '녹번역e편한세상캐슬',     dong: '응암동', jibun: '769',    build: '2020', deals: [[59.9,53000,0],[59.9,55000,0],[84.9,66000,0],[59.9,40000,80]] },
+        { name: '백련산에스케이뷰아이파크', dong: '응암동', jibun: '767',   build: '2011', deals: [[59.9,44000,0],[59.9,46000,0],[84.9,52000,0]] },
+        { name: '백련산힐스테이트3차',     dong: '응암동', jibun: '761',    build: '2011', deals: [[59.9,46000,0],[59.9,48000,0],[84.9,55000,0]] },
+        { name: '래미안베라힐즈',          dong: '녹번동', jibun: '283',    build: '2019', deals: [[59.9,50000,0],[59.9,52000,0],[84.9,63000,0]] },
       ],
     };
 
@@ -255,7 +256,7 @@
             while (m <= 0) { m += 12; y -= 1; }
             const [area, deposit, monthly] = d;
             out.push({
-              aptName: apt.name, dong: apt.dong, area, deposit, monthlyRent: monthly,
+              aptName: apt.name, dong: apt.dong, jibun: apt.jibun || '', area, deposit, monthlyRent: monthly,
               floor: String(((i * 7 + Math.round(area)) % 18) + 2),
               buildYear: apt.build,
               dealYear: String(y), dealMonth: String(m).padStart(2, '0'),
@@ -822,6 +823,10 @@ function dabangUrl(aptName, dong) {
             const newest = a.deals.reduce((p, c) => dateKey(c) > dateKey(p) ? c : p, a.deals[0]);
             a.aptName = newest.aptName;
             a.buildYear = newest.buildYear || a.buildYear;
+            // 지번 (실거래 기록 중 가장 많이 나온 값)
+            const jibunCount = {};
+            a.deals.forEach(d => { if (d.jibun) jibunCount[d.jibun] = (jibunCount[d.jibun] || 0) + 1; });
+            a.jibun = Object.keys(jibunCount).sort((x, y) => jibunCount[y] - jibunCount[x])[0] || '';
             return a;
           });
           apts.sort(aptSorter);
@@ -1063,7 +1068,9 @@ function dabangUrl(aptName, dong) {
                   const minJ = jeonseDeals.length ? Math.min(...jeonseDeals.map(d => d.deposit)) : null;
                   const maxJ = jeonseDeals.length ? Math.max(...jeonseDeals.map(d => d.deposit)) : null;
                   const naverUrl = naverLandUrl(apt.aptName, apt.dong);
-                  const alias = findAlias(apt, APT_WATCHLIST[group.code]);
+                  const watch = findWatch(apt, APT_WATCHLIST[group.code]);
+                  const alias = watch && watch.alias;
+                  const jibunAddr = `서울 ${group.name} ${apt.dong}${apt.jibun ? ' ' + apt.jibun : ''}`;
                   return (
                     <div key={idx} className={`bg-white rounded-xl border overflow-hidden active:shadow-md transition-shadow flex flex-col ${apt.hasJeonse ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'}`}>
                       {/* 단지 헤더 */}
@@ -1081,8 +1088,14 @@ function dabangUrl(aptName, dong) {
                             실거래 {apt.dealCount}건
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                          <span className="flex items-center gap-0.5"><MapPin size={11} /> {apt.dong}</span>
+                        <p className="text-xs text-slate-500 flex items-start gap-1 mt-0.5 leading-snug">
+                          <MapPin size={12} className="shrink-0 mt-0.5 text-slate-400" />
+                          <span>
+                            {jibunAddr}
+                            {watch && watch.hjd && <span className="text-slate-400"> · 행정동 {watch.hjd}</span>}
+                          </span>
+                        </p>
+                        <p className="text-[11px] text-slate-400 flex items-center gap-2 mt-1">
                           <span className="flex items-center gap-0.5"><Building2 size={11} /> 전용 59㎡형</span>
                           {apt.buildYear && <span className="flex items-center gap-0.5"><Calendar size={11} />{apt.buildYear}년식</span>}
                         </p>
