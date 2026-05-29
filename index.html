@@ -59,41 +59,45 @@
       { code: '11380', name: '은평구' },
     ];
 
-    // ★ 관심 단지 목록 — 이 단지들만 골라서 보여줍니다 (구별)
-    //   keys: 실거래가 단지명에 포함되면 매칭 / dong: 동 이름으로 한 번 더 좁힘
+    // ★ 관심 단지 목록 — 사용자가 지정한 단지만 정확히 표시 (별칭 + 실거래 등록명·동)
+    //   names: 국토부 실거래 등록명(정규화 후 정확 일치) / dong: 동으로 한 번 더 확정 / alias: 화면에 보일 익숙한 이름
     const APT_WATCHLIST = {
       '11200': [ // 성동구
-        { name: '행당대림아파트',    dong: '행당동',   keys: ['행당대림', '대림'] },
-        { name: '행당신동아아파트',  dong: '행당동',   keys: ['신동아'] },
-        { name: '응봉대림2차아파트', dong: '응봉동',   keys: ['대림2차', '대림'] },
-        { name: '응봉현대아파트',    dong: '응봉동',   keys: ['현대'] },
-        { name: '금호동벽산아파트',  dong: '금호동',   keys: ['벽산'] },
-        { name: '응봉신동아아파트',  dong: '응봉동',   keys: ['신동아'] },
-        { name: '왕십리삼성아파트',  dong: '하왕십리동', keys: ['삼성'] },
+        { alias: '행당대림',   names: ['대림e편한세상'],     dong: '행당동' },
+        { alias: '행당신동아', names: ['신동아'],            dong: '행당동' },
+        { alias: '응봉대림2차', names: ['대림2차'],          dong: '응봉동' },
+        { alias: '응봉현대',   names: ['금호현대'],          dong: '응봉동' },
+        { alias: '금호동벽산', names: ['벽산'],              dong: '금호동' },
+        { alias: '응봉신동아', names: ['신동아'],            dong: '응봉동' },
+        { alias: '왕십리삼성', names: ['왕십리삼성'],        dong: '마장동' },
       ],
       '11380': [ // 은평구 (녹번 + 응암동 스크린샷 단지)
-        { name: '녹번아파트',              dong: '녹번동', keys: ['녹번'] },
-        { name: '녹번역e편한세상캐슬',     dong: '녹번동', keys: ['e편한세상', '이편한세상', '캐슬'] },
-        { name: '백련산SK뷰아이파크',      dong: '응암동', keys: ['백련산', 'sk', '아이파크'] },
-        { name: '백련산현대힐스테이트3차', dong: '응암동', keys: ['백련산', '힐스테이트'] },
-        { name: '래미안베라힐즈',          dong: '응암동', keys: ['래미안', '베라힐즈'] },
+        { alias: '녹번현대',           names: ['녹번현대', '녹번2현대'],       dong: '녹번동' },
+        { alias: '녹번역e편한세상캐슬', names: ['녹번역e편한세상캐슬'],         dong: '응암동' },
+        { alias: '백련산SK뷰아이파크',  names: ['백련산에스케이뷰아이파크'],    dong: '응암동' },
+        { alias: '백련산힐스3차',       names: ['백련산힐스테이트3차'],         dong: '응암동' },
+        { alias: '래미안베라힐즈',      names: ['래미안베라힐즈'],             dong: '녹번동' },
       ],
-      // 송파구는 별도 관심단지 지정 없음 → 전체 표시
     };
 
     function normalizeName(s) {
       return (s || '').replace(/아파트/g, '').replace(/단지/g, '')
         .replace(/[\s·.,()\[\]\-]/g, '').toLowerCase();
     }
-    // 단지가 관심목록(watchlist)에 포함되는지 판정
-    function matchWatchlist(item, wl) {
+    // 단지가 관심목록에 정확히 들어가면 사용자 별칭을 반환, 아니면 null
+    function findAlias(item, wl) {
+      if (!wl) return null;
       const an = normalizeName(item.aptName);
       const dn = (item.dong || '');
-      return wl.some(w => {
+      for (const w of wl) {
         const dongOk = !w.dong || dn.includes(w.dong.replace(/동$/, ''));
-        if (!dongOk) return false;
-        return w.keys.some(k => an.includes(normalizeName(k)));
-      });
+        if (!dongOk) continue;
+        if (w.names.some(n => an === normalizeName(n))) return w.alias;
+      }
+      return null;
+    }
+    function matchWatchlist(item, wl) {
+      return !!findAlias(item, wl);
     }
     function isInvalidKey(key) {
       return !key || key.trim() === '' || key === 'DEMO_KEY' || key === '여기에_발급받은_API_키를_입력하세요';
@@ -1059,14 +1063,20 @@ function dabangUrl(aptName, dong) {
                   const minJ = jeonseDeals.length ? Math.min(...jeonseDeals.map(d => d.deposit)) : null;
                   const maxJ = jeonseDeals.length ? Math.max(...jeonseDeals.map(d => d.deposit)) : null;
                   const naverUrl = naverLandUrl(apt.aptName, apt.dong);
+                  const alias = findAlias(apt, APT_WATCHLIST[group.code]);
                   return (
                     <div key={idx} className={`bg-white rounded-xl border overflow-hidden active:shadow-md transition-shadow flex flex-col ${apt.hasJeonse ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'}`}>
                       {/* 단지 헤더 */}
                       <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-                        <div className="flex justify-between items-center mb-1">
-                          <h3 className="font-extrabold text-base text-slate-800 truncate" title={apt.aptName}>
-                            {apt.aptName}
-                          </h3>
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="min-w-0">
+                            <h3 className="font-extrabold text-base text-slate-800 truncate" title={apt.aptName}>
+                              {alias || apt.aptName}
+                            </h3>
+                            {alias && (
+                              <p className="text-[11px] text-slate-400 truncate">등록명: {apt.aptName}</p>
+                            )}
+                          </div>
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 shrink-0 ml-1">
                             실거래 {apt.dealCount}건
                           </span>
